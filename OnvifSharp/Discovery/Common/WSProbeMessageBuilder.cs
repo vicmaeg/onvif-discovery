@@ -1,10 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace OnvifSharp.Discovery.Common
 {
-	class WSProbeMessageBuilder
+	public class WSProbeMessageBuilder
 	{
+		public static byte[] NewProbeMessage ()
+		{
+			var probeMessagewithguid = string.Format (Constants.WS_PROBE_MESSAGE, Guid.NewGuid ().ToString ());
+			return Encoding.ASCII.GetBytes (probeMessagewithguid);
+		}
 	}
 }
