@@ -22,5 +22,6 @@ namespace OnvifSharp.Discovery.Common
 			+ "<d:Probe><d:Types>dn:NetworkVideoTransmitter</d:Types></d:Probe>"
 			+ "</e:Body>"
 			+ "</e:Envelope>";
+		public const string PATTERN = @"^((onvif[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$";
 	}
 }

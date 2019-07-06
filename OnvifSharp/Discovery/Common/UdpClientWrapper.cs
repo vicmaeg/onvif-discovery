@@ -25,6 +25,13 @@ namespace OnvifSharp.Discovery.Common
 				EnableBroadcast = true
 			};
 		}
+		public UdpClientWrapper (IPEndPoint localpoint)
+		{
+			client = new UdpClient (localpoint) {
+				EnableBroadcast = true
+			};
+		}
+
 
 		public async Task<int> SendAsync (byte[] datagram, int bytes, IPEndPoint endPoint)
 		{

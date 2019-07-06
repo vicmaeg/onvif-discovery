@@ -4,7 +4,9 @@ using OnvifSharp.Discovery.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,59 +19,99 @@ namespace OnvifSharp.Discovery
 {
 	public class WSDiscovery : IWSDiscovery
 	{
-		public Task<IEnumerable<DiscoveryDevice>> Discover (int timeout,
-			CancellationToken cancellationToken = default (CancellationToken))
+		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
-			return Discover (timeout, new UdpClientWrapper (), cancellationToken);
+			var devices = new List<DiscoveryDevice> ();
+			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
+			foreach (NetworkInterface adapter in nics) {
+				// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
+				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
+					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
+				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
+				if (adapter.Supports (NetworkInterfaceComponent.IPv4) == false) { continue; }
+				try {
+					IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
+					foreach (var ua in adapterProperties.UnicastAddresses) {
+						if (ua.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+							//                           
+							IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
+							UdpClientWrapper sc = new UdpClientWrapper (myLocalEndPoint);
+							var devices1 = await Discover (timeout, sc, cancellationToken);
+							if (devices1.Count () > 0) devices.AddRange (devices1);
+						}
+					}
+				}
+				catch (Exception ex) {
+					string s = ex.Message;
+				}
+			}
+			return devices;
 		}
 
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int Timeout, IUdpClient client,
-			CancellationToken cancellationToken = default (CancellationToken))
+		   CancellationToken cancellationToken = default)
 		{
-			var devices = new List<DiscoveryDevice> ();
+
 			bool isRunning;
-			await SendProbe (client);
+
+			var devices = new List<DiscoveryDevice> ();
 			var responses = new List<UdpReceiveResult> ();
+			isRunning = true;
+			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (Timeout));
 			try {
-				isRunning = true;
-				var cts = new CancellationTokenSource (TimeSpan.FromSeconds(Timeout));
+				await SendProbe (client);
 				while (isRunning) {
 					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested) {
 						break;
 					}
-					var response = await client.ReceiveAsync ().WithCancellation(cts.Token).WithCancellation(cancellationToken);
-					responses.Add (response);
+					var response = await client.ReceiveAsync ().WithCancellation (cancellationToken).WithCancellation (cts.Token);
+					if (!IsAlreadyDiscovered (response, responses)) {
+						responses.Add (response);
+					}
 				}
-			} catch (OperationCanceledException) {
+			}
+			catch (OperationCanceledException) {
 				isRunning = false;
-			} finally {
+			}
+			finally {
 				client.Close ();
 			}
 			if (cancellationToken.IsCancellationRequested) {
 				return devices;
 			}
-			devices.AddRange(ProcessResponses (responses));
+			devices = ProcessResponses (responses);
 			return devices;
+
+		}
+
+
+		private bool IsAlreadyDiscovered (UdpReceiveResult device, List<UdpReceiveResult> devices)
+		{
+			var query = devices.Where (temp => temp.RemoteEndPoint.ToString ().Equals (device.RemoteEndPoint.ToString ())).ToArray ();
+			return query.Length > 0;
 		}
 
 		async Task SendProbe (IUdpClient client)
 		{
 			var message = WSProbeMessageBuilder.NewProbeMessage ();
+
 			var multicastEndpoint = new IPEndPoint (IPAddress.Parse (Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
 			await client.SendAsync (message, message.Length, multicastEndpoint);
 		}
 
-		IEnumerable<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses)
+		List<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses)
 		{
+			var processedResponse = new List<DiscoveryDevice> ();
 			foreach (var response in responses) {
 				if (response.Buffer != null) {
 					string strResponse = Encoding.UTF8.GetString (response.Buffer);
 					XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
-					foreach (var device in CreateDevices (xmlResponse, response.RemoteEndPoint)) {
-						yield return device;
+					if (!String.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
+						processedResponse.Add (CreateDevice (xmlResponse, response.RemoteEndPoint));
 					}
 				}
 			}
+			return processedResponse;
 		}
 
 		XmlProbeReponse DeserializeResponse (string xml)
@@ -83,35 +125,59 @@ namespace OnvifSharp.Discovery
 			}
 		}
 
-		IEnumerable<DiscoveryDevice> CreateDevices (XmlProbeReponse response, IPEndPoint remoteEndpoint)
+		DiscoveryDevice CreateDevice (XmlProbeReponse response, IPEndPoint remoteEndpoint)
 		{
-			foreach (var probeMatch in response.Body.ProbeMatches) {
-				var discoveryDevice = new DiscoveryDevice ();
-				discoveryDevice.Address = remoteEndpoint.Address;
-				discoveryDevice.XAdresses = ConvertToList (probeMatch.XAddrs);
-				discoveryDevice.Types = ConvertToList (probeMatch.Types);
-				discoveryDevice.Model = ParseModelFromScopes (probeMatch.Scopes);
-				discoveryDevice.Name = ParseNameFromScopes (probeMatch.Scopes);
-				yield return discoveryDevice;
+			var discoveryDevice = new DiscoveryDevice ();
+			string scopes = response.Body.ProbeMatches[0].Scopes;
+			discoveryDevice.Address = remoteEndpoint.Address.ToString ();
+			discoveryDevice.Model = Regex.Match (scopes, "(?<=hardware/).*?(?= )").Value;
+			discoveryDevice.Mac = GetMacAddress (discoveryDevice.Address);
+			discoveryDevice.Mfr = ParseMfrFromScopes (scopes);
+			string xaddr = response.Body.ProbeMatches[0].XAddrs;
+			Uri uri = new Uri (xaddr);
+			discoveryDevice.Port = uri.Port;
+			return discoveryDevice;
+		}
+
+		string GetMacAddress (string ipAddress)
+		{
+			string macAddress = String.Empty;
+			System.Diagnostics.Process pProcess = new System.Diagnostics.Process ();
+			pProcess.StartInfo.FileName = "arp";
+			pProcess.StartInfo.Arguments = "-a " + ipAddress;
+			pProcess.StartInfo.UseShellExecute = false;
+			pProcess.StartInfo.RedirectStandardOutput = true;
+			pProcess.StartInfo.CreateNoWindow = true;
+			pProcess.Start ();
+			string strOutput = pProcess.StandardOutput.ReadToEnd ();
+			string[] substrings = strOutput.Split ('-');
+			pProcess.Close ();
+			if (substrings.Length >= 8) {
+				macAddress = substrings[3].Substring (Math.Max (0, substrings[3].Length - 2))
+						 + ":" + substrings[4] + ":" + substrings[5] + ":" + substrings[6]
+						 + ":" + substrings[7] + ":"
+						 + substrings[8].Substring (0, 2);
 			}
+			return macAddress;
 		}
-
-		IEnumerable<string> ConvertToList (string spacedListString)
+		string ParseMfrFromScopes (string scopes)
 		{
-			var strings = spacedListString.Split (null);
-			foreach (var str in strings) {
-				yield return str.Trim ();
+
+			var nameQuery = scopes.Split (' ').Where (scope => scope.Contains ("name/")).ToArray ();
+			var mfrQuery = scopes.Split (' ').Where (scope => scope.Contains ("mfr/")).ToArray ();
+			if (mfrQuery.Length > 0) {
+				var match = Regex.Match (Uri.UnescapeDataString (mfrQuery[0]), Constants.PATTERN);
+				return match.Groups[6].Value;
 			}
-		}
-
-		string ParseModelFromScopes (string scopes)
-		{
-			return Regex.Match (scopes, "(?<=hardware/).*?(?= )").Value;
-		}
-
-		string ParseNameFromScopes (string scopes)
-		{
-			return Regex.Match (scopes, "(?<=name/).*?(?= )").Value;
+			if (nameQuery.Length > 0) {
+				var match = Regex.Match (Uri.UnescapeDataString (nameQuery[0]), Constants.PATTERN);
+				string temp = match.Groups[6].Value;
+				if (temp.Contains (" ")) {
+					temp = match.Groups[6].Value.Split (' ')[0];
+				}
+				return temp;
+			}
+			return string.Empty;
 		}
 	}
 }
