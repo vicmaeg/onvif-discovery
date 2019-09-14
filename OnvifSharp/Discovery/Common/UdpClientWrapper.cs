@@ -25,6 +25,7 @@ namespace OnvifSharp.Discovery.Common
 				EnableBroadcast = true
 			};
 		}
+
 		public UdpClientWrapper (IPEndPoint localpoint)
 		{
 			client = new UdpClient (localpoint) {
