@@ -5,9 +5,9 @@ namespace OnvifSharp.Discovery.Common
 {
 	public class WSProbeMessageBuilder
 	{
-		public static byte[] NewProbeMessage ()
+		public static byte[] NewProbeMessage (Guid messageId)
 		{
-			var probeMessagewithguid = string.Format (Constants.WS_PROBE_MESSAGE, Guid.NewGuid ().ToString ());
+			var probeMessagewithguid = string.Format (Constants.WS_PROBE_MESSAGE, messageId.ToString ());
 			return Encoding.ASCII.GetBytes (probeMessagewithguid);
 		}
 	}

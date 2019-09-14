@@ -50,15 +50,13 @@ namespace OnvifSharp.Discovery
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
-
-			bool isRunning;
-
-			var devices = new List<DiscoveryDevice> ();
+			bool isRunning = true;
+			Guid messageId = Guid.NewGuid ();
 			var responses = new List<UdpReceiveResult> ();
-			isRunning = true;
 			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
+
 			try {
-				await SendProbe (client);
+				await SendProbe (client, messageId);
 				while (isRunning) {
 					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested) {
 						break;
@@ -76,36 +74,31 @@ namespace OnvifSharp.Discovery
 				client.Close ();
 			}
 			if (cancellationToken.IsCancellationRequested) {
-				return devices;
+				return new List<DiscoveryDevice>();
 			}
-			devices = ProcessResponses (responses);
-			return devices;
-
+			return ProcessResponses (responses, messageId);
 		}
 
-		private bool IsAlreadyDiscovered (UdpReceiveResult device, List<UdpReceiveResult> devices)
+		async Task SendProbe (IUdpClient client, Guid messageId)
 		{
-			var query = devices.Where (temp => temp.RemoteEndPoint.ToString ().Equals (device.RemoteEndPoint.ToString ())).ToArray ();
-			return query.Length > 0;
-		}
-
-		async Task SendProbe (IUdpClient client)
-		{
-			var message = WSProbeMessageBuilder.NewProbeMessage ();
+			var message = WSProbeMessageBuilder.NewProbeMessage (messageId);
 
 			var multicastEndpoint = new IPEndPoint (IPAddress.Parse (Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
 			await client.SendAsync (message, message.Length, multicastEndpoint);
 		}
 
-		List<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses)
+		IEnumerable<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses, Guid messageId)
 		{
 			var processedResponse = new List<DiscoveryDevice> ();
 			foreach (var response in responses) {
 				if (response.Buffer != null) {
 					string strResponse = Encoding.UTF8.GetString (response.Buffer);
 					XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
-					if (!String.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
-						processedResponse.Add (CreateDevice (xmlResponse, response.RemoteEndPoint));
+					if (IsFromProbeMessage (messageId, xmlResponse)
+						&& xmlResponse.Body.ProbeMatches.Any()
+						&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
+						var device = CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
+						processedResponse.Add (device);
 					}
 				}
 			}
@@ -123,44 +116,31 @@ namespace OnvifSharp.Discovery
 			}
 		}
 
-		DiscoveryDevice CreateDevice (XmlProbeReponse response, IPEndPoint remoteEndpoint)
+		bool IsAlreadyDiscovered (UdpReceiveResult device, List<UdpReceiveResult> devices)
+		{
+			var deviceEndpointString = device.RemoteEndPoint.ToString ();
+			return devices.Any (d => d.RemoteEndPoint.ToString ().Equals (deviceEndpointString));
+		}
+
+		bool IsFromProbeMessage (Guid messageId, XmlProbeReponse response)
+		{
+			return response.Header.RelatesTo.Contains (messageId.ToString ());
+		}
+
+		DiscoveryDevice CreateDevice (ProbeMatch probeMatch, IPEndPoint remoteEndpoint)
 		{
 			var discoveryDevice = new DiscoveryDevice ();
-			string scopes = response.Body.ProbeMatches[0].Scopes;
+			string scopes = probeMatch.Scopes;
 			discoveryDevice.Address = remoteEndpoint.Address.ToString ();
-			discoveryDevice.Model = Regex.Match (scopes, "(?<=hardware/).*?(?= )").Value;
-			discoveryDevice.Mac = GetMacAddress (discoveryDevice.Address);
+			discoveryDevice.Model = Regex.Match (scopes, "(?<=hardware/).*?(?= )")?.Value;
 			discoveryDevice.Mfr = ParseMfrFromScopes (scopes);
-			string xaddr = response.Body.ProbeMatches[0].XAddrs;
-			Uri uri = new Uri (xaddr);
-			discoveryDevice.Port = uri.Port;
+			discoveryDevice.XAdresses = ConvertToList (probeMatch.XAddrs);
+			discoveryDevice.Types = ConvertToList (probeMatch.Types);
 			return discoveryDevice;
 		}
 
-		string GetMacAddress (string ipAddress)
-		{
-			string macAddress = String.Empty;
-			System.Diagnostics.Process pProcess = new System.Diagnostics.Process ();
-			pProcess.StartInfo.FileName = "arp";
-			pProcess.StartInfo.Arguments = "-a " + ipAddress;
-			pProcess.StartInfo.UseShellExecute = false;
-			pProcess.StartInfo.RedirectStandardOutput = true;
-			pProcess.StartInfo.CreateNoWindow = true;
-			pProcess.Start ();
-			string strOutput = pProcess.StandardOutput.ReadToEnd ();
-			string[] substrings = strOutput.Split ('-');
-			pProcess.Close ();
-			if (substrings.Length >= 8) {
-				macAddress = substrings[3].Substring (Math.Max (0, substrings[3].Length - 2))
-						 + ":" + substrings[4] + ":" + substrings[5] + ":" + substrings[6]
-						 + ":" + substrings[7] + ":"
-						 + substrings[8].Substring (0, 2);
-			}
-			return macAddress;
-		}
 		string ParseMfrFromScopes (string scopes)
 		{
-
 			var nameQuery = scopes.Split (' ').Where (scope => scope.Contains ("name/")).ToArray ();
 			var mfrQuery = scopes.Split (' ').Where (scope => scope.Contains ("mfr/")).ToArray ();
 			if (mfrQuery.Length > 0) {
@@ -177,5 +157,36 @@ namespace OnvifSharp.Discovery
 			}
 			return string.Empty;
 		}
+
+		IEnumerable<string> ConvertToList (string spacedListString)
+		{
+			var strings = spacedListString.Split (null);
+			foreach (var str in strings) {
+				yield return str.Trim ();
+			}
+		}
+
+		// TODO: Research for a cross-platform solution to know the mac based on an IP
+		//string GetMacAddress (string ipAddress)
+		//{
+		//	string macAddress = String.Empty;
+		//	System.Diagnostics.Process pProcess = new System.Diagnostics.Process ();
+		//	pProcess.StartInfo.FileName = "arp";
+		//	pProcess.StartInfo.Arguments = "-a " + ipAddress;
+		//	pProcess.StartInfo.UseShellExecute = false;
+		//	pProcess.StartInfo.RedirectStandardOutput = true;
+		//	pProcess.StartInfo.CreateNoWindow = true;
+		//	pProcess.Start ();
+		//	string strOutput = pProcess.StandardOutput.ReadToEnd ();
+		//	string[] substrings = strOutput.Split ('-');
+		//	pProcess.Close ();
+		//	if (substrings.Length >= 8) {
+		//		macAddress = substrings[3].Substring (Math.Max (0, substrings[3].Length - 2))
+		//				 + ":" + substrings[4] + ":" + substrings[5] + ":" + substrings[6]
+		//				 + ":" + substrings[7] + ":"
+		//				 + substrings[8].Substring (0, 2);
+		//	}
+		//	return macAddress;
+		//}
 	}
 }
