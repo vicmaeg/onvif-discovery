@@ -23,32 +23,31 @@ namespace OnvifSharp.Discovery
 		{
 			var devices = new List<DiscoveryDevice> ();
 			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
+			List<Task<IEnumerable<DiscoveryDevice>>> discoveries = new List<Task<IEnumerable<DiscoveryDevice>>> ();
 			foreach (NetworkInterface adapter in nics) {
 				// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
 				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
 					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
 				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
 				if (adapter.Supports (NetworkInterfaceComponent.IPv4) == false) { continue; }
-				try {
-					IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
-					foreach (var ua in adapterProperties.UnicastAddresses) {
-						if (ua.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
-							//                           
-							IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
-							UdpClientWrapper sc = new UdpClientWrapper (myLocalEndPoint);
-							var devices1 = await Discover (timeout, sc, cancellationToken);
-							if (devices1.Count () > 0) devices.AddRange (devices1);
-						}
+				
+				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
+				foreach (var ua in adapterProperties.UnicastAddresses) {
+					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {                 
+						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
+						UdpClientWrapper sc = new UdpClientWrapper (myLocalEndPoint);
+						discoveries.Add(Discover (timeout, sc, cancellationToken));
 					}
 				}
-				catch (Exception ex) {
-					string s = ex.Message;
-				}
+			}
+			var discoverResults = await Task.WhenAll (discoveries);
+			foreach (var results in discoverResults) {
+				devices.AddRange (results);
 			}
 			return devices;
 		}
 
-		public async Task<IEnumerable<DiscoveryDevice>> Discover (int Timeout, IUdpClient client,
+		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
 
@@ -57,7 +56,7 @@ namespace OnvifSharp.Discovery
 			var devices = new List<DiscoveryDevice> ();
 			var responses = new List<UdpReceiveResult> ();
 			isRunning = true;
-			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (Timeout));
+			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
 			try {
 				await SendProbe (client);
 				while (isRunning) {
@@ -83,7 +82,6 @@ namespace OnvifSharp.Discovery
 			return devices;
 
 		}
-
 
 		private bool IsAlreadyDiscovered (UdpReceiveResult device, List<UdpReceiveResult> devices)
 		{
