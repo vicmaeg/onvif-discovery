@@ -33,7 +33,6 @@ namespace OnvifSharp.Discovery.Common
 			};
 		}
 
-
 		public async Task<int> SendAsync (byte[] datagram, int bytes, IPEndPoint endPoint)
 		{
 			return await client.SendAsync (datagram, bytes, endPoint);
