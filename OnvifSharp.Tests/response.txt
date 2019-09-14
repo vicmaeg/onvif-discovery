@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsdd="http://schemas.xmlsoap.org/ws/2005/04/discovery" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:dn="http://www.onvif.org/ver10/network/wsdl">
+	<SOAP-ENV:Header>
+		<wsa:MessageID>urn:uuid:1dfe4a61-747e-4b04-86aa-4e59d5653acc</wsa:MessageID>
+		<wsa:RelatesTo>uuid:6f0eab64-44f3-4d4c-83eb-c750603a4cdb</wsa:RelatesTo>
+		<wsa:To SOAP-ENV:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</wsa:To>
+		<wsa:Action SOAP-ENV:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2005/04/discovery/ProbeMatches</wsa:Action>
+		<wsdd:AppSequence InstanceId="0" MessageNumber="13"></wsdd:AppSequence>
+	</SOAP-ENV:Header>
+	<SOAP-ENV:Body>
+		<wsdd:ProbeMatches>
+			<wsdd:ProbeMatch>
+				<wsa:EndpointReference>
+					<wsa:Address>uuid:c9790c3a-701b-464d-a189-080027e782e3</wsa:Address>
+				</wsa:EndpointReference>
+				<wsdd:Types>dn:NetworkVideoTransmitter</wsdd:Types>
+				<wsdd:Scopes>onvif://www.onvif.org/Profile/Streaming onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/ONVIF-Emu onvif://www.onvif.org/name/ONVIF-Emu onvif://www.onvif.org/location/Default</wsdd:Scopes>
+				<wsdd:XAddrs>http://192.168.43.161:8080/onvif/device_service</wsdd:XAddrs>
+				<wsdd:MetadataVersion>1</wsdd:MetadataVersion>
+			</wsdd:ProbeMatch>
+		</wsdd:ProbeMatches>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
