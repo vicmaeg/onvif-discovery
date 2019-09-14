@@ -1,29 +1,25 @@
 ﻿using OnvifSharp.Discovery;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace OnvifSharp.CLI
 {
 	class Program
 	{
-		static async Task Main (string[] args)
+		static async Task Main ()
 		{
-			Console.WriteLine ("Starting Discover ONVIF cameras!");
+			Console.WriteLine ("Starting Discover ONVIF cameras!\n");
 			var discovery = new WSDiscovery ();
-			var devices = await discovery.Discover (5);
-			Console.WriteLine ($"Devices Discovered: {devices.Count ()}");
-			int i = 1;
-			foreach (var device in devices) {
-				Console.Write ($"{i}) Name: {device.Name} Model: {device.Model} ");
-				Console.Write ($"XAddresses: ");
+			var devices = await discovery.Discover (1);
+			foreach(var device in devices) {
+				Console.WriteLine ($"Device model {device.Model} from manufacturer {device.Mfr} has address {device.Address}");
+				Console.Write ($"Urls to device: ");
 				foreach (var address in device.XAdresses) {
 					Console.Write ($"{address}, ");
 				}
-				i++;
-				Console.WriteLine ("");
+				Console.WriteLine ("\n");
 			}
-			Console.WriteLine ("ONVIF Discovery finnished!");
+			Console.WriteLine ("ONVIF Discovery finished");
 		}
 	}
 }
