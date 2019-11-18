@@ -4,33 +4,33 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+  - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 variables:
-  projects: '**/*.csproj'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  projects: "**/*.csproj"
+  buildPlatform: "Any CPU"
+  buildConfiguration: "Release"
 
 steps:
-- task: DotNetCoreCLI@2
-  displayName: Restore
-  inputs:
-    command: restore
-    projects: '$(projects)'
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: "$(projects)"
 
-- task: DotNetCoreCLI@2
-  displayName: Build
-  inputs:
-    command: build
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      command: build
+      projects: "**/*.csproj"
+      arguments: "--configuration $(buildConfiguration)"
 
-
-- task: DotNetCoreCLI@2
-  inputs:
-    command: test
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: "**/*Tests/*.csproj"
+      arguments: "--configuration $(buildConfiguration)"
