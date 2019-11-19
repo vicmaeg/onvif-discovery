@@ -1,5 +1,4 @@
 # ASP.NET Core (.NET Framework)
-
 # Build and test ASP.NET Core projects targeting the full .NET Framework.
 # Add steps that publish symbols, save build artifacts, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
@@ -18,10 +17,11 @@ variables:
 steps:
   - task: SonarCloudPrepare@1
     inputs:
-      SonarCloud: "sonarcloud"
-      organization: "vmartos"
-      scannerMode: "CLI"
-      configMode: "file"
+      SonarCloud: 'sonarcloud'
+      organization: 'vmartos'
+      scannerMode: 'MSBuild'
+      projectKey: 'vmartos_OnvifSharp'
+      configMode: file
 
   - task: DotNetCoreCLI@2
     displayName: Restore
