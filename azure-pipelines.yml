@@ -16,13 +16,12 @@ variables:
   buildConfiguration: "Release"
 
 steps:
-
   - task: SonarCloudPrepare@1
     inputs:
-      SonarCloud: 'sonarcloud'
-      organization: 'vmartos'
-      scannerMode: 'CLI'
-      configMode: 'file'
+      SonarCloud: "sonarcloud"
+      organization: "vmartos"
+      scannerMode: "CLI"
+      configMode: "file"
 
   - task: DotNetCoreCLI@2
     displayName: Restore
@@ -42,10 +41,10 @@ steps:
     inputs:
       command: test
       projects: "**/*Tests/*.csproj"
-      arguments: "--configuration $(buildConfiguration)"
+      arguments: "--configuration $(buildConfiguration) --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=../cov"
 
   - task: SonarCloudAnalyze@1
 
   - task: SonarCloudPublish@1
     inputs:
-      pollingTimeoutSec: '300'
+      pollingTimeoutSec: "300"
