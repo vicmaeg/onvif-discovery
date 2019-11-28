@@ -17,11 +17,15 @@ variables:
 steps:
   - task: SonarCloudPrepare@1
     inputs:
-      SonarCloud: 'sonarcloud'
-      organization: 'vmartos'
-      scannerMode: 'MSBuild'
-      projectKey: 'vmartos_OnvifSharp'
-      configMode: file
+      SonarCloud: "sonarcloud"
+      organization: "vmartos"
+      scannerMode: "MSBuild"
+      projectKey: "vmartos_OnvifSharp"
+      projectVersion:
+      extraProperties: |
+        sonar.exclusions=**/bin/**/*,**/obj/**/*
+        sonar.language=cs
+        sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/cov.opencover.xml
 
   - task: DotNetCoreCLI@2
     displayName: Restore
