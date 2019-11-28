@@ -40,7 +40,6 @@ steps:
     displayName: Test
     inputs:
       command: test
-      projects: "**/*Tests/*.csproj"
       arguments: "--configuration $(buildConfiguration) --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=../cov"
 
   - task: SonarCloudAnalyze@1
