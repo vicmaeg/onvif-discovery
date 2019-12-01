@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OnvifSharp.Discovery.Client;
 using OnvifSharp.Discovery.Common;
 using OnvifSharp.Discovery.Interfaces;
 using OnvifSharp.Discovery.Models;
@@ -12,14 +13,19 @@ namespace OnvifSharp.Discovery
 {
 	public class DiscoveryService : IDiscoveryService
 	{
-		IWSDiscovery wsDiscovery;
+		readonly IWSDiscovery wsDiscovery;
 		CancellationTokenSource cancellation;
 		bool isRunning;
 
-		public DiscoveryService ()
+		public DiscoveryService () : this (new WSDiscovery ())
+		{
+
+		}
+
+		public DiscoveryService (IWSDiscovery wsDiscovery)
 		{
 			DiscoveredDevices = new ObservableCollection<DiscoveryDevice> ();
-			wsDiscovery = new WSDiscovery ();
+			this.wsDiscovery = wsDiscovery;
 		}
 
 		public ObservableCollection<DiscoveryDevice> DiscoveredDevices { get; }

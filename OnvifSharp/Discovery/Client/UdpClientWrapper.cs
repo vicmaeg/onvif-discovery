@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Common
+namespace OnvifSharp.Discovery.Client
 {
 	/// <summary>
 	/// A simple <see cref="System.Net.Sockets.UdpClient"/> wrapper
@@ -11,20 +11,6 @@ namespace OnvifSharp.Discovery.Common
 	public class UdpClientWrapper : IUdpClient
 	{
 		UdpClient client;
-
-		public UdpClientWrapper ()
-		{
-			client = new UdpClient {
-				EnableBroadcast = true
-			};
-		}
-
-		public UdpClientWrapper (string ipAddress, int port)
-		{
-			client = new UdpClient (new IPEndPoint (IPAddress.Parse (ipAddress), port)) {
-				EnableBroadcast = true
-			};
-		}
 
 		public UdpClientWrapper (IPEndPoint localpoint)
 		{

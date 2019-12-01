@@ -1,4 +1,5 @@
-﻿using OnvifSharp.Discovery.Common;
+using OnvifSharp.Discovery.Client;
+using OnvifSharp.Discovery.Common;
 using OnvifSharp.Discovery.Interfaces;
 using OnvifSharp.Discovery.Models;
 using System;
@@ -6,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,27 +19,27 @@ namespace OnvifSharp.Discovery
 {
 	public class WSDiscovery : IWSDiscovery
 	{
+		readonly IUdpClientFactory clientFactory;
+
+		public WSDiscovery () : this (new UdpClientFactory ())
+		{
+		}
+
+		public WSDiscovery (IUdpClientFactory clientFactory)
+		{
+			this.clientFactory = clientFactory;
+		}
+
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
 			var devices = new List<DiscoveryDevice> ();
-			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
 			List<Task<IEnumerable<DiscoveryDevice>>> discoveries = new List<Task<IEnumerable<DiscoveryDevice>>> ();
-			foreach (NetworkInterface adapter in nics) {
-				// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
-				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
-					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
-				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
-				if (adapter.Supports (NetworkInterfaceComponent.IPv4) == false) { continue; }
-				
-				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
-				foreach (var ua in adapterProperties.UnicastAddresses) {
-					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {                 
-						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
-						UdpClientWrapper sc = new UdpClientWrapper (myLocalEndPoint);
-						discoveries.Add(Discover (timeout, sc, cancellationToken));
-					}
-				}
+
+			var clients = clientFactory.CreateClientForeachInterface ();
+			foreach (var client in clients) {
+				discoveries.Add (Discover (timeout, client, cancellationToken));
 			}
+
 			var discoverResults = await Task.WhenAll (discoveries);
 			foreach (var results in discoverResults) {
 				devices.AddRange (results);
@@ -47,7 +47,7 @@ namespace OnvifSharp.Discovery
 			return devices;
 		}
 
-		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
+		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
 			bool isRunning = true;
@@ -66,15 +66,13 @@ namespace OnvifSharp.Discovery
 						responses.Add (response);
 					}
 				}
-			}
-			catch (OperationCanceledException) {
+			} catch (OperationCanceledException) {
 				isRunning = false;
-			}
-			finally {
+			} finally {
 				client.Close ();
 			}
 			if (cancellationToken.IsCancellationRequested) {
-				return new List<DiscoveryDevice>();
+				return new List<DiscoveryDevice> ();
 			}
 			return ProcessResponses (responses, messageId);
 		}
@@ -95,7 +93,7 @@ namespace OnvifSharp.Discovery
 					string strResponse = Encoding.UTF8.GetString (response.Buffer);
 					XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
 					if (IsFromProbeMessage (messageId, xmlResponse)
-						&& xmlResponse.Body.ProbeMatches.Any()
+						&& xmlResponse.Body.ProbeMatches.Any ()
 						&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
 						var device = CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
 						processedResponse.Add (device);
@@ -165,28 +163,5 @@ namespace OnvifSharp.Discovery
 				yield return str.Trim ();
 			}
 		}
-
-		// TODO: Research for a cross-platform solution to know the mac based on an IP
-		//string GetMacAddress (string ipAddress)
-		//{
-		//	string macAddress = String.Empty;
-		//	System.Diagnostics.Process pProcess = new System.Diagnostics.Process ();
-		//	pProcess.StartInfo.FileName = "arp";
-		//	pProcess.StartInfo.Arguments = "-a " + ipAddress;
-		//	pProcess.StartInfo.UseShellExecute = false;
-		//	pProcess.StartInfo.RedirectStandardOutput = true;
-		//	pProcess.StartInfo.CreateNoWindow = true;
-		//	pProcess.Start ();
-		//	string strOutput = pProcess.StandardOutput.ReadToEnd ();
-		//	string[] substrings = strOutput.Split ('-');
-		//	pProcess.Close ();
-		//	if (substrings.Length >= 8) {
-		//		macAddress = substrings[3].Substring (Math.Max (0, substrings[3].Length - 2))
-		//				 + ":" + substrings[4] + ":" + substrings[5] + ":" + substrings[6]
-		//				 + ":" + substrings[7] + ":"
-		//				 + substrings[8].Substring (0, 2);
-		//	}
-		//	return macAddress;
-		//}
 	}
 }

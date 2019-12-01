@@ -9,7 +9,5 @@ namespace OnvifSharp.Discovery.Interfaces
 	{
 		Task<IEnumerable<DiscoveryDevice>> Discover (int timeout,
 			CancellationToken cancellationToken = default);
-		Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
-			CancellationToken cancellationToken = default);
 	}
 }
