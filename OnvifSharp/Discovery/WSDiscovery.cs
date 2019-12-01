@@ -1,5 +1,6 @@
 using OnvifSharp.Discovery.Client;
 using OnvifSharp.Discovery.Common;
+using OnvifSharp.Discovery.Exceptions;
 using OnvifSharp.Discovery.Interfaces;
 using OnvifSharp.Discovery.Models;
 using System;
@@ -36,6 +37,9 @@ namespace OnvifSharp.Discovery
 			List<Task<IEnumerable<DiscoveryDevice>>> discoveries = new List<Task<IEnumerable<DiscoveryDevice>>> ();
 
 			var clients = clientFactory.CreateClientForeachInterface ();
+			if (!clients.Any ()) {
+				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
+			}
 			foreach (var client in clients) {
 				discoveries.Add (Discover (timeout, client, cancellationToken));
 			}
