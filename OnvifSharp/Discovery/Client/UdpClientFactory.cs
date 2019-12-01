@@ -23,14 +23,16 @@ namespace OnvifSharp.Discovery.Client
 				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
 					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
 				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
-				if (adapter.Supports (NetworkInterfaceComponent.IPv4) == false) { continue; }
+				if (!adapter.Supports (NetworkInterfaceComponent.IPv4)) { continue; }
 
 				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
 				foreach (var ua in adapterProperties.UnicastAddresses) {
 					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {
 						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
-						IUdpClient client = CreateClient (myLocalEndPoint);
-						clients.Add (client);
+						try {
+							IUdpClient client = CreateClient (myLocalEndPoint);
+							clients.Add (client);
+						} catch (SocketException) { }
 					}
 				}
 			}
