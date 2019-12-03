@@ -19,7 +19,7 @@ namespace OnvifDiscovery.Tests.Client
 
 			// Assert
 			client.Should ().NotBeNull ();
-			client.Should ().BeOfType<UdpClientWrapper> ();
+			client.Should ().BeOfType<OnvifUdpClient> ();
 		}
 
 		[Fact]
@@ -33,7 +33,7 @@ namespace OnvifDiscovery.Tests.Client
 
 			// Assert
 			clients.Should ().HaveCountGreaterOrEqualTo (1);
-			clients.Should ().AllBeOfType<UdpClientWrapper> ();
+			clients.Should ().AllBeOfType<OnvifUdpClient> ();
 		}
 	}
 }

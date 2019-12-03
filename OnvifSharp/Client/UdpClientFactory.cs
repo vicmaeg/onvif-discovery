@@ -8,14 +8,14 @@ namespace OnvifDiscovery.Client
 {
 	public class UdpClientFactory : IUdpClientFactory
 	{
-		public IUdpClient CreateClient (IPEndPoint endpoint)
+		public IOnvifUdpClient CreateClient (IPEndPoint endpoint)
 		{
-			return new UdpClientWrapper (endpoint);
+			return new OnvifUdpClient (endpoint);
 		}
 
-		public IEnumerable<IUdpClient> CreateClientForeachInterface ()
+		public IEnumerable<IOnvifUdpClient> CreateClientForeachInterface ()
 		{
-			var clients = new List<IUdpClient> ();
+			var clients = new List<IOnvifUdpClient> ();
 
 			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
 			foreach (NetworkInterface adapter in nics) {
@@ -30,7 +30,7 @@ namespace OnvifDiscovery.Client
 					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {
 						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
 						try {
-							IUdpClient client = CreateClient (myLocalEndPoint);
+							IOnvifUdpClient client = CreateClient (myLocalEndPoint);
 							clients.Add (client);
 						} catch (SocketException) { }
 					}

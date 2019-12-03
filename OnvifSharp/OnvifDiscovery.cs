@@ -51,7 +51,7 @@ namespace OnvifDiscovery
 			return devices;
 		}
 
-		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
+		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IOnvifUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
 			bool isRunning = true;
@@ -81,12 +81,10 @@ namespace OnvifDiscovery
 			return ProcessResponses (responses, messageId);
 		}
 
-		async Task SendProbe (IUdpClient client, Guid messageId)
+		async Task SendProbe (IOnvifUdpClient client, Guid messageId)
 		{
-			var message = WSProbeMessageBuilder.NewProbeMessage (messageId);
-
 			var multicastEndpoint = new IPEndPoint (IPAddress.Parse (Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
-			await client.SendAsync (message, message.Length, multicastEndpoint);
+			await client.SendProbeAsync (messageId, multicastEndpoint);
 		}
 
 		IEnumerable<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses, Guid messageId)

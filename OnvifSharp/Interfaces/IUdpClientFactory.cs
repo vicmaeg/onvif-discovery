@@ -5,9 +5,9 @@ namespace OnvifDiscovery.Interfaces
 {
 	public interface IUdpClientFactory
 	{
-		IUdpClient CreateClient (IPEndPoint endpoint);
+		IOnvifUdpClient CreateClient (IPEndPoint endpoint);
 
-		IEnumerable<IUdpClient> CreateClientForeachInterface ();
+		IEnumerable<IOnvifUdpClient> CreateClientForeachInterface ();
 	}
 }
 
