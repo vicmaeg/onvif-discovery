@@ -32,8 +32,8 @@ To use the library install and add a reference of the OnvifDiscovery nuget packa
 // add the using
 using OnvifDiscovery;
 
-// Create an OnvifDiscovery instance
-var onvifDiscovery = new OnvifDiscovery ();
+// Create a Discovery instance
+var onvifDiscovery = new Discovery ();
 
 // Call the asynchronous method Discover with a timeout of 1 second
 var onvifDevices = await onvifDiscovery.Discover (1);

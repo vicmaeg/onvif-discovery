@@ -10,7 +10,7 @@
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
     <AssemblyCopyright>© Víctor Martos 2019</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Víctor Martos</Authors>
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
     <IsPackable>true</IsPackable>
