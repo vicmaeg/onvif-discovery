@@ -13,7 +13,7 @@ namespace OnvifDiscovery.Client
 	/// </summary>
 	public class OnvifUdpClient : IOnvifUdpClient
 	{
-		UdpClient client;
+		readonly UdpClient client;
 
 		public OnvifUdpClient (IPEndPoint localpoint)
 		{

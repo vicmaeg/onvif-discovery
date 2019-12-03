@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OnvifSharp\OnvifDiscovery.csproj" />
+    <ProjectReference Include="..\OnvifDiscovery\OnvifDiscovery.csproj" />
   </ItemGroup>
 
   <ItemGroup>
