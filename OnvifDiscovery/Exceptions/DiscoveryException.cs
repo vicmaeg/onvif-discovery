@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace OnvifDiscovery.Exceptions
 {
+	[Serializable]
 	public class DiscoveryException : Exception
 	{
 		public DiscoveryException ()
@@ -17,5 +19,11 @@ namespace OnvifDiscovery.Exceptions
 			: base (message, inner)
 		{
 		}
+
+		protected DiscoveryException (SerializationInfo info, StreamingContext context)
+			: base (info, context)
+		{
+		}
+
 	}
 }
