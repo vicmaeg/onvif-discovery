@@ -1,5 +1,4 @@
-﻿using OnvifDiscovery;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace OnvifDiscovery.CLI
