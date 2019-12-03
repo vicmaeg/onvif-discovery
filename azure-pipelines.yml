@@ -23,7 +23,7 @@ steps:
       projectKey: "vmartos_OnvifSharp"
       projectVersion:
       extraProperties: |
-        sonar.exclusions=**/bin/**/*,**/obj/**/*
+        sonar.exclusions=**/bin/**/*,**/obj/**/*, OnvifDiscovery/Client/OnvifUdpClient.cs
         sonar.language=cs
         sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/cov.opencover.xml
 
