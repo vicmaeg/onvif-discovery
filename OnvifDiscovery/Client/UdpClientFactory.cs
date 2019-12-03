@@ -7,7 +7,7 @@ using OnvifDiscovery.Interfaces;
 
 namespace OnvifDiscovery.Client
 {
-	public class UdpClientFactory : IUdpClientFactory
+	internal class UdpClientFactory : IUdpClientFactory
 	{
 		public IOnvifUdpClient CreateClient (IPEndPoint endpoint)
 		{

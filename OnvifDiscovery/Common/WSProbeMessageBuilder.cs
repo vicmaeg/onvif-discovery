@@ -3,7 +3,7 @@ using System.Text;
 
 namespace OnvifDiscovery.Common
 {
-	public static class WSProbeMessageBuilder
+	internal static class WSProbeMessageBuilder
 	{
 		public static byte[] NewProbeMessage (Guid messageId)
 		{

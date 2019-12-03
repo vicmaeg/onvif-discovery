@@ -11,7 +11,7 @@ namespace OnvifDiscovery.Client
 	/// A simple Udp client that wrapps <see cref="System.Net.Sockets.UdpClient"/>
 	/// It creates the probe messages also
 	/// </summary>
-	public class OnvifUdpClient : IOnvifUdpClient
+	internal class OnvifUdpClient : IOnvifUdpClient
 	{
 		readonly UdpClient client;
 

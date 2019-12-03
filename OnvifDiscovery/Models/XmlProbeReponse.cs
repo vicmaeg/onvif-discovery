@@ -2,8 +2,8 @@
 
 namespace OnvifDiscovery.Models
 {
-	[XmlRoot("Envelope", Namespace = "http://www.w3.org/2003/05/soap-envelope")]
-	public class XmlProbeReponse
+	[XmlRoot ("Envelope", Namespace = "http://www.w3.org/2003/05/soap-envelope")]
+	internal class XmlProbeReponse
 	{
 		[XmlElement (Namespace = "http://www.w3.org/2003/05/soap-envelope")]
 		public Header Header { get; set; }
@@ -12,9 +12,9 @@ namespace OnvifDiscovery.Models
 		public Body Body { get; set; }
 	}
 
-	public class Header
+	internal class Header
 	{
-		[XmlElement(Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
+		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
 		public string MessageID { get; set; }
 
 		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
@@ -23,19 +23,19 @@ namespace OnvifDiscovery.Models
 		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
 		public string To { get; set; }
 
-		[XmlElement(Namespace = "http://schemas.xmlsoap.org/ws/2005/04/discovery")]
+		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2005/04/discovery")]
 		public string AppSequence { get; set; }
 	}
 
-	public class Body
+	internal class Body
 	{
-		[XmlArray(Namespace = "http://schemas.xmlsoap.org/ws/2005/04/discovery")]
+		[XmlArray (Namespace = "http://schemas.xmlsoap.org/ws/2005/04/discovery")]
 		public ProbeMatch[] ProbeMatches { get; set; }
 	}
-	
-	public class ProbeMatch
+
+	internal class ProbeMatch
 	{
-		[XmlElement(Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
+		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
 		public EndpointReference EndpointReference { get; set; }
 
 		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2005/04/discovery")]
@@ -51,7 +51,7 @@ namespace OnvifDiscovery.Models
 		public string MetadataVersion { get; set; }
 	}
 
-	public class EndpointReference
+	internal class EndpointReference
 	{
 		[XmlElement (Namespace = "http://schemas.xmlsoap.org/ws/2004/08/addressing")]
 		public string Address { get; set; }

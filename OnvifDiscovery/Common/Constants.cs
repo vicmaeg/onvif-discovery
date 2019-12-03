@@ -1,7 +1,7 @@
 ﻿
 namespace OnvifDiscovery.Common
 {
-	public static class Constants
+	internal static class Constants
 	{
 		public const string WS_MULTICAST_ADDRESS = "239.255.255.250";
 		public const int WS_MULTICAST_PORT = 3702;

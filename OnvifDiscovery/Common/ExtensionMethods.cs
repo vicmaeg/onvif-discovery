@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace OnvifDiscovery.Common
 {
-	public static class ExtensionMethods
+	internal static class ExtensionMethods
 	{
 		/// <summary>
-		/// Used to provide cancellation possibility to any Async Methods returning a Task<T>
+		/// Used to provide cancellation possibility to any Async Methods returning a Task
 		/// </summary>
-		public static async Task<T> WithCancellation<T> (this Task<T> task, CancellationToken cancellationToken)
+		internal static async Task<T> WithCancellation<T> (this Task<T> task, CancellationToken cancellationToken)
 		{
 			var tcs = new TaskCompletionSource<bool> ();
 			using (cancellationToken.Register (s => ((TaskCompletionSource<bool>)s).TrySetResult (true), tcs)) {

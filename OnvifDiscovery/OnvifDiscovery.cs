@@ -18,14 +18,24 @@ using System.Xml.Serialization;
 
 namespace OnvifDiscovery
 {
+	/// <summary>
+	/// Onvif Discovery, has the logic to discover onvif compliant devices on the network
+	/// </summary>
 	public class OnvifDiscovery : IOnvifDiscovery
 	{
 		readonly IUdpClientFactory clientFactory;
 
+		/// <summary>
+		/// Creates an instance of <see cref="OnvifDiscovery"/>
+		/// </summary>
 		public OnvifDiscovery () : this (new UdpClientFactory ())
 		{
 		}
 
+		/// <summary>
+		/// Creates an instance of <see cref="OnvifDiscovery"/>
+		/// </summary>
+		/// <param name="clientFactory">An UDP client factory instance</param>
 		public OnvifDiscovery (IUdpClientFactory clientFactory)
 		{
 			this.clientFactory = clientFactory;
