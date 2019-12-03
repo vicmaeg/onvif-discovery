@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 
-namespace OnvifSharp.Discovery.Common
+namespace OnvifDiscovery.Common
 {
-	public class WSProbeMessageBuilder
+	public static class WSProbeMessageBuilder
 	{
 		public static byte[] NewProbeMessage (Guid messageId)
 		{

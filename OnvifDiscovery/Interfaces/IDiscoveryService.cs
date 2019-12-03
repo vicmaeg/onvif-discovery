@@ -1,9 +1,9 @@
 ﻿
-using OnvifSharp.Discovery.Models;
+using OnvifDiscovery.Models;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Interfaces
+namespace OnvifDiscovery.Interfaces
 {
 	public interface IDiscoveryService
 	{

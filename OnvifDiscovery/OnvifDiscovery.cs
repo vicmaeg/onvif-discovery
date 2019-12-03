@@ -1,12 +1,13 @@
-﻿using OnvifSharp.Discovery.Common;
-using OnvifSharp.Discovery.Interfaces;
-using OnvifSharp.Discovery.Models;
+using OnvifDiscovery.Client;
+using OnvifDiscovery.Common;
+using OnvifDiscovery.Exceptions;
+using OnvifDiscovery.Interfaces;
+using OnvifDiscovery.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,31 +16,40 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace OnvifSharp.Discovery
+namespace OnvifDiscovery
 {
-	public class WSDiscovery : IWSDiscovery
+	public class OnvifDiscovery : IOnvifDiscovery
 	{
+		readonly IUdpClientFactory clientFactory;
+
+		public OnvifDiscovery () : this (new UdpClientFactory ())
+		{
+		}
+
+		public OnvifDiscovery (IUdpClientFactory clientFactory)
+		{
+			this.clientFactory = clientFactory;
+		}
+
+		/// <summary>
+		/// Discover new onvif devices on the network
+		/// </summary>
+		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
+		/// <param name="cancellationToken">A cancellation token</param>
+		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
 			var devices = new List<DiscoveryDevice> ();
-			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
 			List<Task<IEnumerable<DiscoveryDevice>>> discoveries = new List<Task<IEnumerable<DiscoveryDevice>>> ();
-			foreach (NetworkInterface adapter in nics) {
-				// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
-				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
-					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
-				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
-				if (adapter.Supports (NetworkInterfaceComponent.IPv4) == false) { continue; }
-				
-				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
-				foreach (var ua in adapterProperties.UnicastAddresses) {
-					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {                 
-						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
-						UdpClientWrapper sc = new UdpClientWrapper (myLocalEndPoint);
-						discoveries.Add(Discover (timeout, sc, cancellationToken));
-					}
-				}
+
+			var clients = clientFactory.CreateClientForeachInterface ();
+			if (!clients.Any ()) {
+				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
 			}
+			foreach (var client in clients) {
+				discoveries.Add (Discover (timeout, client, cancellationToken));
+			}
+
 			var discoverResults = await Task.WhenAll (discoveries);
 			foreach (var results in discoverResults) {
 				devices.AddRange (results);
@@ -47,17 +57,16 @@ namespace OnvifSharp.Discovery
 			return devices;
 		}
 
-		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IUdpClient client,
+		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IOnvifUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
-			bool isRunning = true;
 			Guid messageId = Guid.NewGuid ();
 			var responses = new List<UdpReceiveResult> ();
 			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
 
 			try {
 				await SendProbe (client, messageId);
-				while (isRunning) {
+				while (true) {
 					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested) {
 						break;
 					}
@@ -66,25 +75,21 @@ namespace OnvifSharp.Discovery
 						responses.Add (response);
 					}
 				}
-			}
-			catch (OperationCanceledException) {
-				isRunning = false;
-			}
-			finally {
+			} catch (OperationCanceledException) {
+				// Either the user canceled the action or the timeout has fired
+			} finally {
 				client.Close ();
 			}
 			if (cancellationToken.IsCancellationRequested) {
-				return new List<DiscoveryDevice>();
+				return new List<DiscoveryDevice> ();
 			}
 			return ProcessResponses (responses, messageId);
 		}
 
-		async Task SendProbe (IUdpClient client, Guid messageId)
+		async Task SendProbe (IOnvifUdpClient client, Guid messageId)
 		{
-			var message = WSProbeMessageBuilder.NewProbeMessage (messageId);
-
 			var multicastEndpoint = new IPEndPoint (IPAddress.Parse (Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
-			await client.SendAsync (message, message.Length, multicastEndpoint);
+			await client.SendProbeAsync (messageId, multicastEndpoint);
 		}
 
 		IEnumerable<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses, Guid messageId)
@@ -95,7 +100,7 @@ namespace OnvifSharp.Discovery
 					string strResponse = Encoding.UTF8.GetString (response.Buffer);
 					XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
 					if (IsFromProbeMessage (messageId, xmlResponse)
-						&& xmlResponse.Body.ProbeMatches.Any()
+						&& xmlResponse.Body.ProbeMatches.Any ()
 						&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
 						var device = CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
 						processedResponse.Add (device);
@@ -165,28 +170,5 @@ namespace OnvifSharp.Discovery
 				yield return str.Trim ();
 			}
 		}
-
-		// TODO: Research for a cross-platform solution to know the mac based on an IP
-		//string GetMacAddress (string ipAddress)
-		//{
-		//	string macAddress = String.Empty;
-		//	System.Diagnostics.Process pProcess = new System.Diagnostics.Process ();
-		//	pProcess.StartInfo.FileName = "arp";
-		//	pProcess.StartInfo.Arguments = "-a " + ipAddress;
-		//	pProcess.StartInfo.UseShellExecute = false;
-		//	pProcess.StartInfo.RedirectStandardOutput = true;
-		//	pProcess.StartInfo.CreateNoWindow = true;
-		//	pProcess.Start ();
-		//	string strOutput = pProcess.StandardOutput.ReadToEnd ();
-		//	string[] substrings = strOutput.Split ('-');
-		//	pProcess.Close ();
-		//	if (substrings.Length >= 8) {
-		//		macAddress = substrings[3].Substring (Math.Max (0, substrings[3].Length - 2))
-		//				 + ":" + substrings[4] + ":" + substrings[5] + ":" + substrings[6]
-		//				 + ":" + substrings[7] + ":"
-		//				 + substrings[8].Substring (0, 2);
-		//	}
-		//	return macAddress;
-		//}
 	}
 }
