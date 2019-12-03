@@ -1,9 +1,8 @@
 ﻿
 namespace OnvifDiscovery.Common
 {
-	public class Constants
+	public static class Constants
 	{
-		public const int WS_TIMEOUT = 5000;
 		public const string WS_MULTICAST_ADDRESS = "239.255.255.250";
 		public const int WS_MULTICAST_PORT = 3702;
 		public const string WS_PROBE_MESSAGE =
