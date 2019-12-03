@@ -1,4 +1,4 @@
-# OnvifSharp
+# Onvif Discovery
 
 [![Build Status](https://dev.azure.com/vmaeg/onvif-discovery/_apis/build/status/vmartos.onvif-discovery?branchName=master)](https://dev.azure.com/vmaeg/onvif-discovery/_build/latest?definitionId=2&branchName=master)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vmartos_OnvifSharp&metric=alert_status)](https://sonarcloud.io/dashboard?id=vmartos_OnvifSharp)
@@ -6,6 +6,39 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=vmartos_OnvifSharp&metric=code_smells)](https://sonarcloud.io/dashboard?id=vmartos_OnvifSharp)
 
 
-C# .NetStandard 2.0 library to discover ONVIF compliant devices
+OnvifDiscovery is a simple cross-platform library to discover ONVIF compliant devices.
+
+## Where can I use it?
+
+OnvifDiscovery targets .NET Standard 2.0 and .NET framework 4.5, so it can run on platforms:
+
+* .NET core >= 2.0 (Windows, MacOS, linux)
+* .NET Framework >= 4.5 (Windows)
+* Mono >= 5.4 (Windows, MacOS, linux)
+* Xamarin.iOS >= 10.14 (iOS)
+* Xamarin.Mac >= 3.8 (MacOS)
+* Xamarin.Android >= 8.0 (Android)
+
+More info: [click here](https://docs.microsoft.com/es-es/dotnet/standard/net-standard)
 
 
+## Getting started
+
+OnvifDiscovery sends a probe message to all available network interfaces and waits the timeout specified in order to get the list of discovered onvif devices that replied to the probe message.
+
+To use the library install and add a reference of the OnvifDiscovery nuget package, then call the discover method like the following sample:
+
+```cs
+// add the using
+using OnvifDiscovery;
+
+// Create an OnvifDiscovery instance
+var onvifDiscovery = new OnvifDiscovery ();
+
+// Call the asynchronous method Discover with a timeout of 1 second
+var onvifDevices = await onvifDiscovery.Discover (1);
+
+// Alternatively, you can call Discover with a cancellation token
+CancellationTokenSource cancellation = new CancellationTokenSource ();
+var onvifDevices = await onvifDiscovery.Discover (1, cancellation.Token);
+```
