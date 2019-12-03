@@ -8,6 +8,7 @@
 
   <PropertyGroup>
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
+    <AssemblyCopyright>© Víctor Martos 2019</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
     <Version>1.0.0</Version>
     <Authors>Víctor Martos</Authors>
