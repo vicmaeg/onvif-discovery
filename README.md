@@ -10,10 +10,10 @@ OnvifDiscovery is a simple cross-platform library to discover ONVIF compliant de
 
 ## Where can I use it?
 
-OnvifDiscovery targets .NET Standard 2.0 and .NET framework 4.5, so it can run on platforms:
+OnvifDiscovery targets .NET Standard 2.0, so it can run on platforms:
 
 * .NET core >= 2.0 (Windows, MacOS, linux)
-* .NET Framework >= 4.5 (Windows)
+* .NET Framework >= 4.6.1 (Windows)
 * Mono >= 5.4 (Windows, MacOS, linux)
 * Xamarin.iOS >= 10.14 (iOS)
 * Xamarin.Mac >= 3.8 (MacOS)
