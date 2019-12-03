@@ -19,7 +19,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="../OnvifSharp/OnvifSharp.csproj" />
+    <ProjectReference Include="..\OnvifSharp\OnvifDiscovery.csproj" />
   </ItemGroup>
 </Project>

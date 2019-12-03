@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Interfaces
+namespace OnvifDiscovery.Interfaces
 {
 	/// <summary>
 	/// UDP Client interface to wrapp UdpClient and easily mock <see cref="System.Net.Sockets.UdpClient"/> in tests

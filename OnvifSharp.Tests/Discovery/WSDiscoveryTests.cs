@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
-using OnvifSharp.Discovery;
-using OnvifSharp.Discovery.Client;
-using OnvifSharp.Discovery.Exceptions;
-using OnvifSharp.Discovery.Interfaces;
+using OnvifDiscovery;
+using OnvifDiscovery.Client;
+using OnvifDiscovery.Exceptions;
+using OnvifDiscovery.Interfaces;
 using Xunit;
 
-namespace OnvifSharp.Tests.Discovery
+namespace OnvifDiscovery.Tests
 {
 	public class WSDiscoveryTests
 	{
-		WSDiscovery wSDiscovery;
+		OnvifDiscovery wSDiscovery;
 		Mock<IUdpClientFactory> udpClientFactoryMock;
 
 		public WSDiscoveryTests ()
 		{
 			udpClientFactoryMock = new Mock<IUdpClientFactory> ();
-			wSDiscovery = new WSDiscovery (udpClientFactoryMock.Object);
+			wSDiscovery = new OnvifDiscovery (udpClientFactoryMock.Object);
 		}
 
 		[Fact]

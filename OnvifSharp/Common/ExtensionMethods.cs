@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Common
+namespace OnvifDiscovery.Common
 {
 	public static class ExtensionMethods
 	{

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Net;
 
-namespace OnvifSharp.Discovery.Interfaces
+namespace OnvifDiscovery.Interfaces
 {
 	public interface IUdpClientFactory
 	{

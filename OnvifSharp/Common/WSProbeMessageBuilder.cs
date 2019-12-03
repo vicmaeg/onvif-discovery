@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace OnvifSharp.Discovery.Common
+namespace OnvifDiscovery.Common
 {
 	public static class WSProbeMessageBuilder
 	{

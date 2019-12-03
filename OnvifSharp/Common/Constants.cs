@@ -1,5 +1,5 @@
 ﻿
-namespace OnvifSharp.Discovery.Common
+namespace OnvifDiscovery.Common
 {
 	public class Constants
 	{

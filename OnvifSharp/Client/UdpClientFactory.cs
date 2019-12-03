@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using OnvifSharp.Discovery.Interfaces;
+using OnvifDiscovery.Interfaces;
 
-namespace OnvifSharp.Discovery.Client
+namespace OnvifDiscovery.Client
 {
 	public class UdpClientFactory : IUdpClientFactory
 	{

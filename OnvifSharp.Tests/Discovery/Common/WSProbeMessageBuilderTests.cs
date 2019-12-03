@@ -3,10 +3,10 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using FluentAssertions;
-using OnvifSharp.Discovery.Common;
+using OnvifDiscovery.Common;
 using Xunit;
 
-namespace OnvifSharp.Tests.Discovery.Common
+namespace OnvifDiscovery.Tests.Common
 {
 	public class WSProbeMessageBuilderTests
 	{

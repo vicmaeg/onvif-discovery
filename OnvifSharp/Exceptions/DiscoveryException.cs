@@ -1,6 +1,6 @@
 using System;
 
-namespace OnvifSharp.Discovery.Exceptions
+namespace OnvifDiscovery.Exceptions
 {
 	public class DiscoveryException : Exception
 	{

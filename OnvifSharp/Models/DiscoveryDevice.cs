@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OnvifSharp.Discovery.Models
+namespace OnvifDiscovery.Models
 {
 	public class DiscoveryDevice : IEquatable<DiscoveryDevice>
 	{

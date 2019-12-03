@@ -1,8 +1,8 @@
-using OnvifSharp.Discovery.Client;
-using OnvifSharp.Discovery.Common;
-using OnvifSharp.Discovery.Exceptions;
-using OnvifSharp.Discovery.Interfaces;
-using OnvifSharp.Discovery.Models;
+using OnvifDiscovery.Client;
+using OnvifDiscovery.Common;
+using OnvifDiscovery.Exceptions;
+using OnvifDiscovery.Interfaces;
+using OnvifDiscovery.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,17 +16,17 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace OnvifSharp.Discovery
+namespace OnvifDiscovery
 {
-	public class WSDiscovery : IWSDiscovery
+	public class OnvifDiscovery : IOnvifDiscovery
 	{
 		readonly IUdpClientFactory clientFactory;
 
-		public WSDiscovery () : this (new UdpClientFactory ())
+		public OnvifDiscovery () : this (new UdpClientFactory ())
 		{
 		}
 
-		public WSDiscovery (IUdpClientFactory clientFactory)
+		public OnvifDiscovery (IUdpClientFactory clientFactory)
 		{
 			this.clientFactory = clientFactory;
 		}

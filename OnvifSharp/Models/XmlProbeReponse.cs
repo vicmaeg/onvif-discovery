@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace OnvifSharp.Discovery.Models
+namespace OnvifDiscovery.Models
 {
 	[XmlRoot("Envelope", Namespace = "http://www.w3.org/2003/05/soap-envelope")]
 	public class XmlProbeReponse

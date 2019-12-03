@@ -1,9 +1,9 @@
-﻿using OnvifSharp.Discovery.Interfaces;
+﻿using OnvifDiscovery.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Client
+namespace OnvifDiscovery.Client
 {
 	/// <summary>
 	/// A simple <see cref="System.Net.Sockets.UdpClient"/> wrapper

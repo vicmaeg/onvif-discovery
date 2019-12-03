@@ -1,9 +1,9 @@
 using System.Net;
 using FluentAssertions;
-using OnvifSharp.Discovery.Client;
+using OnvifDiscovery.Client;
 using Xunit;
 
-namespace OnvifSharp.Tests.Discovery.Client
+namespace OnvifDiscovery.Tests.Client
 {
 	public class UdpClientFactoryTests
 	{

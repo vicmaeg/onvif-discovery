@@ -1,11 +1,11 @@
-﻿using OnvifSharp.Discovery.Models;
+﻿using OnvifDiscovery.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OnvifSharp.Discovery.Interfaces
+namespace OnvifDiscovery.Interfaces
 {
-	public interface IWSDiscovery
+	public interface IOnvifDiscovery
 	{
 		Task<IEnumerable<DiscoveryDevice>> Discover (int timeout,
 			CancellationToken cancellationToken = default);
