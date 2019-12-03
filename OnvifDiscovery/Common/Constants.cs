@@ -1,4 +1,6 @@
-﻿
+﻿using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo ("OnvifDiscovery.Tests")]
+
 namespace OnvifDiscovery.Common
 {
 	internal static class Constants
