@@ -76,6 +76,7 @@ namespace OnvifDiscovery
 					}
 				}
 			} catch (OperationCanceledException) {
+				// Either the user canceled the action or the timeout has fired
 			} finally {
 				client.Close ();
 			}

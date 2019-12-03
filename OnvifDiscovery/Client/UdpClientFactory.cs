@@ -29,7 +29,9 @@ namespace OnvifDiscovery.Client
 						try {
 							IOnvifUdpClient client = CreateClient (myLocalEndPoint);
 							clients.Add (client);
-						} catch (SocketException) { continue; }
+						} catch (SocketException) {
+							// Discard clients that produces a SocketException when created
+						}
 					}
 				}
 			}
