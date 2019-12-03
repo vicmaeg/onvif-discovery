@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -19,12 +20,8 @@ namespace OnvifDiscovery.Client
 
 			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
 			foreach (NetworkInterface adapter in nics) {
-				// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
-				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
-					!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) continue;
-				if (adapter.OperationalStatus == OperationalStatus.Down) { continue; }
-				if (!adapter.Supports (NetworkInterfaceComponent.IPv4)) { continue; }
 
+				if (!IsValidAdapter (adapter)) { continue; }
 				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
 				foreach (var ua in adapterProperties.UnicastAddresses) {
 					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {
@@ -32,11 +29,21 @@ namespace OnvifDiscovery.Client
 						try {
 							IOnvifUdpClient client = CreateClient (myLocalEndPoint);
 							clients.Add (client);
-						} catch (SocketException) { }
+						} catch (SocketException) { continue; }
 					}
 				}
 			}
 			return clients;
+		}
+
+		bool IsValidAdapter (NetworkInterface adapter)
+		{
+			// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
+			if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
+				!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) return false;
+			if (adapter.OperationalStatus == OperationalStatus.Down) { return false; }
+			if (!adapter.Supports (NetworkInterfaceComponent.IPv4)) { return false; }
+			return true;
 		}
 	}
 }
