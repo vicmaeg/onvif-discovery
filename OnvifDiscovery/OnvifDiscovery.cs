@@ -31,6 +31,12 @@ namespace OnvifDiscovery
 			this.clientFactory = clientFactory;
 		}
 
+		/// <summary>
+		/// Discover new onvif devices on the network
+		/// </summary>
+		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
+		/// <param name="cancellationToken">A cancellation token</param>
+		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
 			var devices = new List<DiscoveryDevice> ();
@@ -54,14 +60,13 @@ namespace OnvifDiscovery
 		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IOnvifUdpClient client,
 		   CancellationToken cancellationToken = default)
 		{
-			bool isRunning = true;
 			Guid messageId = Guid.NewGuid ();
 			var responses = new List<UdpReceiveResult> ();
 			var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
 
 			try {
 				await SendProbe (client, messageId);
-				while (isRunning) {
+				while (true) {
 					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested) {
 						break;
 					}
@@ -71,7 +76,6 @@ namespace OnvifDiscovery
 					}
 				}
 			} catch (OperationCanceledException) {
-				isRunning = false;
 			} finally {
 				client.Close ();
 			}
