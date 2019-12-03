@@ -8,7 +8,7 @@ namespace OnvifDiscovery.Interfaces
 	/// <summary>
 	/// Onvif Discovery, has the logic to discover onvif compliant devices on the network
 	/// </summary>
-	public interface IOnvifDiscovery
+	public interface IDiscovery
 	{
 		/// <summary>
 		/// Discover new onvif devices on the network

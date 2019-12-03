@@ -8,7 +8,7 @@ namespace OnvifDiscovery.CLI
 		static async Task Main ()
 		{
 			Console.WriteLine ("Starting Discover ONVIF cameras!\n");
-			var discovery = new OnvifDiscovery ();
+			var discovery = new Discovery ();
 			var devices = await discovery.Discover (1);
 			foreach (var device in devices) {
 				Console.WriteLine ($"Device model {device.Model} from manufacturer {device.Mfr} has address {device.Address}");

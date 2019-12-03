@@ -21,22 +21,22 @@ namespace OnvifDiscovery
 	/// <summary>
 	/// Onvif Discovery, has the logic to discover onvif compliant devices on the network
 	/// </summary>
-	public class OnvifDiscovery : IOnvifDiscovery
+	public class Discovery : IDiscovery
 	{
 		readonly IUdpClientFactory clientFactory;
 
 		/// <summary>
-		/// Creates an instance of <see cref="OnvifDiscovery"/>
+		/// Creates an instance of <see cref="Discovery"/>
 		/// </summary>
-		public OnvifDiscovery () : this (new UdpClientFactory ())
+		public Discovery () : this (new UdpClientFactory ())
 		{
 		}
 
 		/// <summary>
-		/// Creates an instance of <see cref="OnvifDiscovery"/>
+		/// Creates an instance of <see cref="Discovery"/>
 		/// </summary>
 		/// <param name="clientFactory">An UDP client factory instance</param>
-		public OnvifDiscovery (IUdpClientFactory clientFactory)
+		public Discovery (IUdpClientFactory clientFactory)
 		{
 			this.clientFactory = clientFactory;
 		}

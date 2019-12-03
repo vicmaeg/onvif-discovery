@@ -16,13 +16,13 @@ namespace OnvifDiscovery.Tests
 {
 	public class OnvifDiscoveryTests
 	{
-		OnvifDiscovery wSDiscovery;
+		Discovery wSDiscovery;
 		Mock<IUdpClientFactory> udpClientFactoryMock;
 
 		public OnvifDiscoveryTests ()
 		{
 			udpClientFactoryMock = new Mock<IUdpClientFactory> ();
-			wSDiscovery = new OnvifDiscovery (udpClientFactoryMock.Object);
+			wSDiscovery = new Discovery (udpClientFactoryMock.Object);
 		}
 
 		[Fact]
