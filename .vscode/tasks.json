@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build-cli",
+            "label": "build",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/OnvifSharp.CLI/OnvifSharp.CLI.csproj",
+                "${workspaceFolder}/OnvifDiscovery.CLI/OnvifDiscovery.CLI.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/OnvifSharp.CLI/OnvifSharp.CLI.csproj",
+                "${workspaceFolder}/OnvifDiscovery.CLI/OnvifDiscovery.CLI.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -32,7 +32,7 @@
             "args": [
                 "watch",
                 "run",
-                "${workspaceFolder}/OnvifSharp.CLI/OnvifSharp.CLI.csproj",
+                "${workspaceFolder}/OnvifDiscovery.CLI/OnvifDiscovery.CLI.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
