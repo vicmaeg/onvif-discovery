@@ -40,35 +40,51 @@ namespace OnvifDiscovery
 		{
 			this.clientFactory = clientFactory;
 		}
-
+		
 		/// <summary>
 		/// Discover new onvif devices on the network
+		/// </summary>
+		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
+		/// <param name="onDeviceDiscovered">A method that is called each time a new device replies.</param>
+		/// <param name="cancellationToken">A cancellation token</param>
+		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
+		public async Task Discover (int timeout, Action<DiscoveryDevice> onDeviceDiscovered,
+			CancellationToken cancellationToken = default)
+		{
+			var clients = clientFactory.CreateClientForeachInterface ();
+			if (!clients.Any ()) {
+				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
+			}
+
+			var discoveries = clients.Select (client => Discover (timeout, client, onDeviceDiscovered, cancellationToken)).ToArray();
+
+			await Task.WhenAll(discoveries);
+		}
+
+		/// <summary>
+		/// Discover new onvif devices on the network.
+		/// Use the <see cref="Discover(int, Action{DiscoveryDevice}, CancellationToken)"/> overload (with an action as a parameter) if you want to retrieve devices as they reply.
 		/// </summary>
 		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
 		/// <param name="cancellationToken">A cancellation token</param>
 		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
-			var devices = new List<DiscoveryDevice> ();
-			List<Task<IEnumerable<DiscoveryDevice>>> discoveries = new List<Task<IEnumerable<DiscoveryDevice>>> ();
-
 			var clients = clientFactory.CreateClientForeachInterface ();
 			if (!clients.Any ()) {
 				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
 			}
-			foreach (var client in clients) {
-				discoveries.Add (Discover (timeout, client, cancellationToken));
-			}
 
-			var discoverResults = await Task.WhenAll (discoveries);
-			foreach (var results in discoverResults) {
-				devices.AddRange (results);
-			}
+			var devices = new List<DiscoveryDevice> ();
+			var discoveries = clients.Select (client => Discover (timeout, client, d => devices.Add (d), cancellationToken));
+
+			await Task.WhenAll(discoveries);
 			return devices;
 		}
 
-		async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, IOnvifUdpClient client,
-		   CancellationToken cancellationToken = default)
+		async Task Discover (int timeout, IOnvifUdpClient client,
+			Action<DiscoveryDevice> onDeviceDiscovered,
+			CancellationToken cancellationToken = default)
 		{
 			Guid messageId = Guid.NewGuid ();
 			var responses = new List<UdpReceiveResult> ();
@@ -83,6 +99,13 @@ namespace OnvifDiscovery
 					var response = await client.ReceiveAsync ().WithCancellation (cancellationToken).WithCancellation (cts.Token);
 					if (!IsAlreadyDiscovered (response, responses)) {
 						responses.Add (response);
+
+						var discoveredDevice = ProcessResponse (response, messageId);
+						if (discoveredDevice != null) {
+#pragma warning disable 4014 // Just trigger the callback and forget about it. This is expected to avoid locking the loop
+							Task.Run(() => onDeviceDiscovered (discoveredDevice));
+#pragma warning restore 4014
+						}
 					}
 				}
 			} catch (OperationCanceledException) {
@@ -90,10 +113,6 @@ namespace OnvifDiscovery
 			} finally {
 				client.Close ();
 			}
-			if (cancellationToken.IsCancellationRequested) {
-				return new List<DiscoveryDevice> ();
-			}
-			return ProcessResponses (responses, messageId);
 		}
 
 		async Task SendProbe (IOnvifUdpClient client, Guid messageId)
@@ -102,22 +121,18 @@ namespace OnvifDiscovery
 			await client.SendProbeAsync (messageId, multicastEndpoint);
 		}
 
-		IEnumerable<DiscoveryDevice> ProcessResponses (IEnumerable<UdpReceiveResult> responses, Guid messageId)
+		DiscoveryDevice ProcessResponse (UdpReceiveResult response, Guid messageId)
 		{
-			var processedResponse = new List<DiscoveryDevice> ();
-			foreach (var response in responses) {
-				if (response.Buffer != null) {
-					string strResponse = Encoding.UTF8.GetString (response.Buffer);
-					XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
-					if (IsFromProbeMessage (messageId, xmlResponse)
-						&& xmlResponse.Body.ProbeMatches.Any ()
-						&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
-						var device = CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
-						processedResponse.Add (device);
-					}
+			if (response.Buffer != null) {
+				string strResponse = Encoding.UTF8.GetString (response.Buffer);
+				XmlProbeReponse xmlResponse = DeserializeResponse (strResponse);
+				if (IsFromProbeMessage (messageId, xmlResponse)
+					&& xmlResponse.Body.ProbeMatches.Any ()
+					&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
+					return CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
 				}
 			}
-			return processedResponse;
+			return null;
 		}
 
 		XmlProbeReponse DeserializeResponse (string xml)
