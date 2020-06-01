@@ -40,7 +40,7 @@ namespace OnvifDiscovery
 		{
 			this.clientFactory = clientFactory;
 		}
-		
+
 		/// <summary>
 		/// Discover new onvif devices on the network
 		/// </summary>
@@ -70,15 +70,9 @@ namespace OnvifDiscovery
 		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
-			var clients = clientFactory.CreateClientForeachInterface ();
-			if (!clients.Any ()) {
-				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
-			}
-
 			var devices = new List<DiscoveryDevice> ();
-			var discoveries = clients.Select (client => Discover (timeout, client, d => devices.Add (d), cancellationToken));
+			await Discover (timeout, d => devices.Add (d), cancellationToken);
 
-			await Task.WhenAll(discoveries);
 			return devices;
 		}
 
