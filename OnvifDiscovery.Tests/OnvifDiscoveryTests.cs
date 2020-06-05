@@ -138,10 +138,9 @@ namespace OnvifDiscovery.Tests
 		}
 
 		[Fact]
-		public async Task Discover_CancelBeforeFinish_ReturnsEmptyList ()
+		public async Task Discover_CancelBeforeFinish_ReturnsPartialList ()
 		{
 			// Arrange
-			CancellationTokenSource cancellation = new CancellationTokenSource ();
 			Guid messageId = Guid.NewGuid ();
 			TestCamera camera = null;
 			Mock<IOnvifUdpClient> udpClientMock = new Mock<IOnvifUdpClient> ();
@@ -151,17 +150,22 @@ namespace OnvifDiscovery.Tests
 				.Callback<Guid, IPEndPoint> ((mId, endpoint) => {
 					messageId = mId;
 				});
+			var cameraNumber = 1;
 			udpClientMock.Setup (udp => udp.ReceiveAsync ())
-						.ReturnsAsync (() => {
-							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", "192.168.1.12");
-							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse ("192.168.1.12"));
-						}).Callback (() => cancellation.Cancel ());
+						.Returns (async () => {
+							await Task.Delay (500).ConfigureAwait (false);
+							var ip = $"192.168.1.{cameraNumber}";
+							cameraNumber++;
+							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
+							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
+						});
 
 			// Act
-			var discoveredDevices = await wSDiscovery.Discover (1, cancellation.Token);
+			CancellationTokenSource cancellation = new CancellationTokenSource (600); // Cancel after 600ms. Since cameras are received every 500ms, we will receive only one
+			var discoveredDevices = await wSDiscovery.Discover (10, cancellation.Token);
 
 			// Assert
-			discoveredDevices.Should ().BeEmpty ();
+			discoveredDevices.Should ().HaveCount (1);
 		}
 	}
 }
