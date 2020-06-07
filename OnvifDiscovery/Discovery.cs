@@ -42,12 +42,13 @@ namespace OnvifDiscovery
 		}
 
 		/// <summary>
-		/// Discover new onvif devices on the network
+		/// Discover new onvif devices on the network passing a callback
+		/// to retrieve devices as they reply
 		/// </summary>
 		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
 		/// <param name="onDeviceDiscovered">A method that is called each time a new device replies.</param>
 		/// <param name="cancellationToken">A cancellation token</param>
-		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
+		/// <returns>The Task to be awaited</returns>
 		public async Task Discover (int timeout, Action<DiscoveryDevice> onDeviceDiscovered,
 			CancellationToken cancellationToken = default)
 		{
@@ -62,12 +63,13 @@ namespace OnvifDiscovery
 		}
 
 		/// <summary>
-		/// Discover new onvif devices on the network.
-		/// Use the <see cref="Discover(int, Action{DiscoveryDevice}, CancellationToken)"/> overload (with an action as a parameter) if you want to retrieve devices as they reply.
+		/// Discover new onvif devices on the network
 		/// </summary>
 		/// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
 		/// <param name="cancellationToken">A cancellation token</param>
 		/// <returns>a list of <see cref="DiscoveryDevice"/></returns>
+		/// <remarks>Use the <see cref="Discover(int, Action{DiscoveryDevice}, CancellationToken)"/> 
+		///  overload (with an action as a parameter) if you want to retrieve devices as they reply.</remarks>
 		public async Task<IEnumerable<DiscoveryDevice>> Discover (int timeout, CancellationToken cancellationToken = default)
 		{
 			var devices = new List<DiscoveryDevice> ();
@@ -87,23 +89,30 @@ namespace OnvifDiscovery
 			try {
 				await SendProbe (client, messageId);
 				while (true) {
-					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested) {
+					if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested)
 						break;
-					}
-					var response = await client.ReceiveAsync ().WithCancellation (cancellationToken).WithCancellation (cts.Token);
-					if (!IsAlreadyDiscovered (response, responses)) {
-						responses.Add (response);
+					try {
+						var response = await client.ReceiveAsync ()
+										.WithCancellation (cancellationToken)
+										.WithCancellation (cts.Token);
 
+						if (IsAlreadyDiscovered (response, responses))
+							continue;
+
+						responses.Add (response);
 						var discoveredDevice = ProcessResponse (response, messageId);
 						if (discoveredDevice != null) {
 #pragma warning disable 4014 // Just trigger the callback and forget about it. This is expected to avoid locking the loop
-							Task.Run(() => onDeviceDiscovered (discoveredDevice));
+							Task.Run (() => onDeviceDiscovered (discoveredDevice));
 #pragma warning restore 4014
 						}
+					} catch (OperationCanceledException) {
+						// Either the user canceled the action or the timeout has fired
+					} catch (Exception) {
+						// we catch all exceptions !
+						// Something might be bad in the response of a camera when call ReceiveAsync (BeginReceive in socket) fail
 					}
 				}
-			} catch (OperationCanceledException) {
-				// Either the user canceled the action or the timeout has fired
 			} finally {
 				client.Close ();
 			}
