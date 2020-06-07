@@ -10,7 +10,8 @@
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
     <AssemblyCopyright>© Víctor Martos 2019</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
+    <PackageReleaseNotes>New discover method that accepts a callback to retrieve devices as they reply</PackageReleaseNotes>
     <Authors>Víctor Martos</Authors>
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
     <IsPackable>true</IsPackable>
