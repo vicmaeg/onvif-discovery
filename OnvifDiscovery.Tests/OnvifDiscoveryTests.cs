@@ -167,5 +167,46 @@ namespace OnvifDiscovery.Tests
 			// Assert
 			discoveredDevices.Should ().HaveCount (1);
 		}
+
+		[Fact]
+		public async Task Discover_Exception_In_ReceiveAsync_Do_Not_Throws_And_Returns_List ()
+		{
+			// Arrange
+			Guid messageId = Guid.NewGuid ();
+			TestCamera camera = null;
+			Mock<IOnvifUdpClient> udpClientMock = new Mock<IOnvifUdpClient> ();
+			udpClientFactoryMock.Setup (cf => cf.CreateClientForeachInterface ()).Returns (new List<IOnvifUdpClient> { udpClientMock.Object });
+			udpClientMock.Setup (cl => cl.SendProbeAsync (It.IsAny<Guid> (), It.IsAny<IPEndPoint> ()))
+				.ReturnsAsync (200)
+				.Callback<Guid, IPEndPoint> ((mId, endpoint) => {
+					messageId = mId;
+				});
+			udpClientMock.SetupSequence (udp => udp.ReceiveAsync ())
+						.ReturnsAsync (() => {
+							var ip = $"192.168.1.1";
+							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
+							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
+						})
+						.ThrowsAsync (new Exception())
+						.Returns (async () => {
+							var ip = $"192.168.1.2";
+							await Task.Delay (700);
+							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
+							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
+						})
+						.Returns (async () => {
+							var ip = $"192.168.1.3";
+							await Task.Delay (400);
+							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
+							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
+						 });
+
+			// Act
+			var discoveredDevices = await wSDiscovery.Discover (1);
+
+			// Arrange
+			discoveredDevices.Should().NotBeEmpty();
+			discoveredDevices.Should().HaveCount(2);
+		}
 	}
 }
