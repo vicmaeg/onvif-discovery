@@ -1,0 +1,133 @@
+﻿{
+  "Devices": [
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/type/Network_Video_Transmitter",
+        "onvif://www.onvif.org/type/ptz",
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/type/video_analytics",
+        "onvif://www.onvif.org/name/ONVIF_ICAMERA",
+        "onvif://www.onvif.org/hardware/MSTAR_IPNC",
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/location/China",
+        "onvif://www.onvif.org/location/Shenzhen"
+      ],
+      "ExpectedModel": "MSTAR_IPNC",
+      "ExpectedMfr": "ONVIF_ICAMERA"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/type/audio_encoder",
+        "onvif://www.onvif.org/hardware/CM-6204-11-I",
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/Profile/G",
+        "onvif://www.onvif.org/name/FLIR%20CM-6204-11-I%20K816600858",
+        "onvif://www.onvif.org/manufacturer/FLIR%20Systems",
+        "onvif://www.onvif.org/manufacturer/DVTel",
+        "dvtel://www.dvtel.com/quasar/gen2/quadhd",
+        "flir://www.flir.com/security/quasar/gen2/quadhd",
+        "onvif://www.onvif.org/location/country/America",
+        "onvif://www.onvif.org/location/country/America",
+        "onvif://www.onvif.org/acc/uuid/0b6b62ea-b49a-49dc-906a-001bd880cd6c",
+        "onvif://www.onvif.org/acc/mac/00-1b-d8-80-cd-6c",
+        "onvif://www.onvif.org/acc/firmware/version/fs20160805NSZ",
+        "onvif://www.onvif.org/acc/mfr/FLIR%20Systems"
+      ],
+      "ExpectedModel": "CM-6204-11-I",
+      "ExpectedMfr": "FLIR Systems"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/type/Network_Video_Transmitter",
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/type/audio_encoder",
+        "onvif://www.onvif.org/hardware/GV-UNP2500",
+        "onvif://www.onvif.org/location/country/taiwan",
+        "onvif://www.onvif.org/name/Geovision",
+        "onvif://www.onvif.org/acc/firmware/version/v3.12%202017-06-"
+      ],
+      "ExpectedModel": "GV-UNP2500",
+      "ExpectedMfr": "Geovision"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/name/Panasonic",
+        "onvif://www.onvif.org/hardware/WV-V1330LK",
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/type/Network_Video_Transmitter",
+        "onvif://www.onvif.org/extension/unique_identifier",
+        "onvif://www.onvif.org/location/office"
+      ],
+      "ExpectedModel": "WV-V1330LK",
+      "ExpectedMfr": "Panasonic"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/type/audio_encoder",
+        "onvif://www.onvif.org/type/ptz",
+        "onvif://www.onvif.org/type/video_analytics",
+        "onvif://www.onvif.org/hardware/2.0-H3M-DO1",
+        "onvif://www.onvif.org/avigilon/mac/00-18-85-14-3e-0a",
+        "onvif://www.onvif.org/avigilon/firmware/version/2.6.0.150(15529)",
+        "onvif://www.onvif.org/avigilon/scopes/changeId/sessionId/12688_3147",
+        "onvif://www.onvif.org/name/acc/Xu%e1%ba%a5t%20c%e1%ba%a3nh%204",
+        "onvif://www.onvif.org/location/acc/Xuat%20canh%204"
+      ],
+      "ExpectedModel": "2.0-H3M-DO1",
+      "ExpectedMfr": "Xuất"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/type/audio_encoder",
+        "onvif://www.onvif.org/type/ptz",
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/hardware/TC-C32TS%20SPEC%3AI8%2FA%2FE%2FY%2FM%2FH%2F2.7-13.5mm",
+        "onvif://www.onvif.org/mfr/ipcamera",
+        "onvif://www.onvif.org/location/country/china",
+        "onvif://www.onvif.org/location/city/tianjin",
+        "onvif://www.onvif.org/mac",
+        "onvif://www.onvif.org/firmware/APP_V3.3.0.20200606",
+        "onvif://www.onvif.org/name/TC-C32TS%20SPEC%3AI8%2FA%2FE%2FY%2FM%2FH%2F2.7-13.5mm",
+        "onvif://www.onvif.org/type/ipcamera",
+        "onvif://www.onvif.org/Profile/G"
+      ],
+      "ExpectedModel": "TC-C32TS SPEC:I8/A/E/Y/M/H/2.7-13.5mm",
+      "ExpectedMfr": "ipcamera"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/hardware/FI710-L",
+        "onvif://www.onvif.org/location/country/China",
+        "onvif://www.onvif.org/name/STD"
+      ],
+      "ExpectedModel": "FI710-L",
+      "ExpectedMfr": "STD"
+    },
+    {
+      "Scopes": [
+        "onvif://www.onvif.org/Profile/Streaming",
+        "onvif://www.onvif.org/Profile/G",
+        "onvif://www.onvif.org/type/basic",
+        "onvif://www.onvif.org/type/audio_encoder",
+        "onvif://www.onvif.org/type/video_encoder",
+        "onvif://www.onvif.org/name/ArielFHDIPCamera",
+        "onvif://www.onvif.org/hardware/CM-3102-11-I",
+        "dvtel://www.dvtel.com/ariel/gen2",
+        "dvtel://www.dvtel.com/ariel/gen2/minidome",
+        "onvif://www.onvif.org/location/",
+        "onvif://www.onvif.org/acc/uuid/98190dc2-0890-4ef8-ac9a-001bd8601f8d",
+        "onvif://www.onvif.org/acc/mac/00-1b-d8-60-1f-8d",
+        "onvif://www.onvif.org/acc/firmware/version/01.05.32.5",
+        "onvif://www.onvif.org/acc/mfr/FLIR%20Systems"
+      ],
+      "ExpectedModel": "CM-3102-11-I",
+      "ExpectedMfr": "FLIR Systems"
+    }
+  ]
+}

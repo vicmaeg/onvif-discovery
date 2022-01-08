@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OnvifDiscovery.Tests
+namespace OnvifDiscovery.Tests.TestHelpers
 {
 	public class TestCamera
 	{
