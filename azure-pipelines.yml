@@ -27,6 +27,11 @@ steps:
         sonar.language=cs
         sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/cov.opencover.xml
 
+  - task: UseDotNet@2
+    displayName: 'Install .NET Core SDK'
+    inputs:
+      version: '6.0.x'
+
   - task: DotNetCoreCLI@2
     displayName: Restore
     inputs:

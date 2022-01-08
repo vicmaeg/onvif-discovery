@@ -10,7 +10,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -132,7 +131,7 @@ namespace OnvifDiscovery
 				if (IsFromProbeMessage (messageId, xmlResponse)
 					&& xmlResponse.Body.ProbeMatches.Any ()
 					&& !string.IsNullOrEmpty (xmlResponse.Body.ProbeMatches[0].Scopes)) {
-					return CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
+					return DeviceFactory.CreateDevice (xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
 				}
 			}
 			return null;
@@ -158,45 +157,6 @@ namespace OnvifDiscovery
 		bool IsFromProbeMessage (Guid messageId, XmlProbeReponse response)
 		{
 			return response.Header.RelatesTo.Contains (messageId.ToString ());
-		}
-
-		DiscoveryDevice CreateDevice (ProbeMatch probeMatch, IPEndPoint remoteEndpoint)
-		{
-			var discoveryDevice = new DiscoveryDevice ();
-			string scopes = probeMatch.Scopes;
-			discoveryDevice.Address = remoteEndpoint.Address.ToString ();
-			discoveryDevice.Model = Regex.Match (scopes, "(?<=hardware/).*?(?= )")?.Value;
-			discoveryDevice.Mfr = ParseMfrFromScopes (scopes);
-			discoveryDevice.XAdresses = ConvertToList (probeMatch.XAddrs);
-			discoveryDevice.Types = ConvertToList (probeMatch.Types);
-			return discoveryDevice;
-		}
-
-		string ParseMfrFromScopes (string scopes)
-		{
-			var nameQuery = scopes.Split (' ').Where (scope => scope.Contains ("name/")).ToArray ();
-			var mfrQuery = scopes.Split (' ').Where (scope => scope.Contains ("mfr/")).ToArray ();
-			if (mfrQuery.Length > 0) {
-				var match = Regex.Match (Uri.UnescapeDataString (mfrQuery[0]), Constants.PATTERN);
-				return match.Groups[6].Value;
-			}
-			if (nameQuery.Length > 0) {
-				var match = Regex.Match (Uri.UnescapeDataString (nameQuery[0]), Constants.PATTERN);
-				string temp = match.Groups[6].Value;
-				if (temp.Contains (" ")) {
-					temp = match.Groups[6].Value.Split (' ')[0];
-				}
-				return temp;
-			}
-			return string.Empty;
-		}
-
-		IEnumerable<string> ConvertToList (string spacedListString)
-		{
-			var strings = spacedListString.Split (null);
-			foreach (var str in strings) {
-				yield return str.Trim ();
-			}
 		}
 	}
 }

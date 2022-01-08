@@ -10,6 +10,7 @@ using Moq;
 using OnvifDiscovery.Client;
 using OnvifDiscovery.Exceptions;
 using OnvifDiscovery.Interfaces;
+using OnvifDiscovery.Tests.TestHelpers;
 using Xunit;
 
 namespace OnvifDiscovery.Tests
