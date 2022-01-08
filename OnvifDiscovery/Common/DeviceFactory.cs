@@ -4,22 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
-using System.Web;
 
 namespace OnvifDiscovery.Common
 {
-	internal class DeviceFactory
+	internal static class DeviceFactory
 	{
 		internal static DiscoveryDevice CreateDevice(ProbeMatch probeMatch, IPEndPoint remoteEndpoint)
 		{
-			var discoveryDevice = new DiscoveryDevice ();
-			string scopes = probeMatch.Scopes;
-			discoveryDevice.Address = remoteEndpoint.Address.ToString ();
-			discoveryDevice.Model = ParseModelFromScopes (scopes);
-			discoveryDevice.Mfr = ParseMfrFromScopes (scopes);
-			discoveryDevice.XAdresses = ConvertToList (probeMatch.XAddrs);
-			discoveryDevice.Types = ConvertToList (probeMatch.Types);
-			return discoveryDevice;
+			return new DiscoveryDevice {
+				Address = remoteEndpoint.Address.ToString (),
+				Model = ParseModelFromScopes (probeMatch.Scopes),
+				Mfr = ParseMfrFromScopes (probeMatch.Scopes),
+				XAdresses = ConvertToList (probeMatch.XAddrs),
+				Types = ConvertToList (probeMatch.Types),
+				Scopes = ConvertToList (probeMatch.Scopes)
+			};
 		}
 
 		private static string ParseModelFromScopes(string scopes)
@@ -32,7 +31,7 @@ namespace OnvifDiscovery.Common
 		{
 			var scopesArray = scopes.Split ();
 			var nameQuery = scopesArray.Where (scope => scope.Contains ("name/")).ToArray ();
-			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/")).ToArray ();
+			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/") || scope.Contains ("manufacturer/")).ToArray ();
 			if (mfrQuery.Length > 0) {
 				var match = Regex.Match (mfrQuery[0], Constants.PATTERN);
 				return Uri.UnescapeDataString(match.Groups[6].Value);

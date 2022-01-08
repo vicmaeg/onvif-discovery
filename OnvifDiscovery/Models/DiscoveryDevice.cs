@@ -32,5 +32,10 @@ namespace OnvifDiscovery.Models
 		/// The device IP address
 		/// </summary>
 		public string Address { get; internal set; }
+
+		/// <summary>
+		/// The device scopes
+		/// </summary>
+		public IEnumerable<string> Scopes { get; internal set; }
 	}
 }

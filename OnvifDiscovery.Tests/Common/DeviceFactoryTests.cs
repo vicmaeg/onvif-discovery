@@ -28,6 +28,7 @@ namespace OnvifDiscovery.Tests.Common
 			//Assert
 			device.Model.Should ().Be (expectedModel);
 			device.Mfr.Should ().Be (expectedMfr);
+			device.Scopes.Should ().BeEquivalentTo (scopes);
 		}
 
 		[Fact]
