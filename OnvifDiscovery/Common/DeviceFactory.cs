@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace OnvifDiscovery.Common
 {
@@ -14,11 +15,17 @@ namespace OnvifDiscovery.Common
 			var discoveryDevice = new DiscoveryDevice ();
 			string scopes = probeMatch.Scopes;
 			discoveryDevice.Address = remoteEndpoint.Address.ToString ();
-			discoveryDevice.Model = Regex.Match (scopes, "(?<=hardware/).*?(?= )")?.Value;
+			discoveryDevice.Model = ParseModelFromScopes (scopes);
 			discoveryDevice.Mfr = ParseMfrFromScopes (scopes);
 			discoveryDevice.XAdresses = ConvertToList (probeMatch.XAddrs);
 			discoveryDevice.Types = ConvertToList (probeMatch.Types);
 			return discoveryDevice;
+		}
+
+		private static string ParseModelFromScopes(string scopes)
+		{
+			var model = Regex.Match (scopes, "(?<=hardware/).*?(?= )")?.Value ?? string.Empty;
+			return Uri.UnescapeDataString (model);
 		}
 
 		private static string ParseMfrFromScopes (string scopes)
