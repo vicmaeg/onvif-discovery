@@ -30,8 +30,9 @@ namespace OnvifDiscovery.Common
 
 		private static string ParseMfrFromScopes (string scopes)
 		{
-			var nameQuery = scopes.Split (' ').Where (scope => scope.Contains ("name/")).ToArray ();
-			var mfrQuery = scopes.Split (' ').Where (scope => scope.Contains ("mfr/")).ToArray ();
+			var scopesArray = scopes.Split ();
+			var nameQuery = scopesArray.Where (scope => scope.Contains ("name/")).ToArray ();
+			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/")).ToArray ();
 			if (mfrQuery.Length > 0) {
 				var match = Regex.Match (mfrQuery[0], Constants.PATTERN);
 				return Uri.UnescapeDataString(match.Groups[6].Value);
@@ -39,8 +40,8 @@ namespace OnvifDiscovery.Common
 			if (nameQuery.Length > 0) {
 				var match = Regex.Match (nameQuery[0], Constants.PATTERN);
 				string temp = Uri.UnescapeDataString(match.Groups[6].Value);
-				if (temp.Contains (" ")) {
-					temp = temp.Split (' ')[0];
+				if (temp.Contains (' ')) {
+					temp = temp.Split ()[0];
 				}
 				return temp;
 			}
@@ -49,7 +50,7 @@ namespace OnvifDiscovery.Common
 
 		private static IEnumerable<string> ConvertToList (string spacedListString)
 		{
-			var strings = spacedListString.Split (null);
+			var strings = spacedListString.Split ();
 			foreach (var str in strings) {
 				yield return str.Trim ();
 			}
