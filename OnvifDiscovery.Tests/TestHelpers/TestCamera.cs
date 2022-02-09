@@ -13,7 +13,7 @@ namespace OnvifDiscovery.Tests.TestHelpers
 			IP = ip;
 		}
 
-		public Guid MessageId { get; }
+		public Guid MessageId { get; set; }
 
 		public Guid Address { get; }
 

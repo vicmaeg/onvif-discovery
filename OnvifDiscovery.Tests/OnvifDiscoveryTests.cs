@@ -209,5 +209,42 @@ namespace OnvifDiscovery.Tests
 			discoveredDevices.Should().NotBeEmpty();
 			discoveredDevices.Should().HaveCount(2);
 		}
+
+		[Fact]
+		public async Task Discover_DuplicatedResultsFromMultipleInterfaces_ResultDoesNotHaveDuplications()
+		{
+			// Arrange
+			var cameraA = new TestCamera (Guid.NewGuid (), Guid.NewGuid (), "AxisHardware", "AxisName", "192.168.1.12");
+			var cameraB = new TestCamera (Guid.NewGuid (), Guid.NewGuid (), "AxisHardware", "AxisName", "192.168.1.12");
+			Mock<IOnvifUdpClient> udpClientAMock = new Mock<IOnvifUdpClient> ();
+			Mock<IOnvifUdpClient> udpClientBMock = new Mock<IOnvifUdpClient> ();
+			udpClientFactoryMock.Setup (cf => cf.CreateClientForeachInterface ()).Returns (new List<IOnvifUdpClient> { udpClientAMock.Object, udpClientBMock.Object });
+			udpClientAMock.Setup (cl => cl.SendProbeAsync (It.IsAny<Guid> (), It.IsAny<IPEndPoint> ()))
+				.ReturnsAsync (200)
+				.Callback<Guid, IPEndPoint> ((mId, endpoint) => {
+					cameraA.MessageId = mId;
+				});
+			udpClientBMock.Setup (cl => cl.SendProbeAsync (It.IsAny<Guid> (), It.IsAny<IPEndPoint> ()))
+				.ReturnsAsync (200)
+				.Callback<Guid, IPEndPoint> ((mId, endpoint) => {
+					cameraB.MessageId = mId;
+				});
+			udpClientAMock.Setup (udp => udp.ReceiveAsync ())
+						.ReturnsAsync (() => {
+							return new UdpReceiveResult (Utils.CreateProbeResponse (cameraA), IPEndPoint.Parse (cameraA.IP));
+						});
+			udpClientBMock.Setup (udp => udp.ReceiveAsync ())
+						.ReturnsAsync (() => {
+							return new UdpReceiveResult (Utils.CreateProbeResponse (cameraB), IPEndPoint.Parse (cameraB.IP));
+						});
+
+			// Act
+			var discoveredDevices = await wSDiscovery.Discover (1);
+
+			// Arrange
+			discoveredDevices.Should ().NotBeEmpty ();
+			discoveredDevices.Should ().HaveCount (1);
+		}
+
 	}
 }
