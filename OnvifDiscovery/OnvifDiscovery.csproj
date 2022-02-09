@@ -10,8 +10,8 @@
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
     <AssemblyCopyright>© Víctor Martos 2019</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
-    <Version>1.2.0</Version>
-    <PackageReleaseNotes>DiscoveryDevice Model and Mfr parsing fixes, and addition of a new property Scopes in DiscoveryDevice</PackageReleaseNotes>
+    <Version>1.2.1</Version>
+    <PackageReleaseNotes>Fixes duplicated results from multiple network interfaces</PackageReleaseNotes>
     <Authors>Víctor Martos</Authors>
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
     <IsPackable>true</IsPackable>
