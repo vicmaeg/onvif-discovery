@@ -4,6 +4,7 @@ using OnvifDiscovery.Exceptions;
 using OnvifDiscovery.Interfaces;
 using OnvifDiscovery.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,11 +53,20 @@ namespace OnvifDiscovery
 			CancellationToken cancellationToken = default)
 		{
 			var clients = clientFactory.CreateClientForeachInterface ();
+			
 			if (!clients.Any ()) {
 				throw new DiscoveryException ("Missing valid NetworkInterfaces, UdpClients could not be created");
 			}
 
-			var discoveries = clients.Select (client => Discover (timeout, client, onDeviceDiscovered, cancellationToken)).ToArray();
+			var discoveredDevicesIPs = new ConcurrentDictionary<string, bool> ();
+			void deviceDiscovered(DiscoveryDevice discoveryDevice)
+			{
+				if (discoveredDevicesIPs.TryAdd(discoveryDevice.Address, true)) {
+					onDeviceDiscovered (discoveryDevice);
+				}
+			}
+
+			var discoveries = clients.Select (client => Discover (timeout, client, deviceDiscovered, cancellationToken)).ToArray();
 
 			await Task.WhenAll(discoveries);
 		}
