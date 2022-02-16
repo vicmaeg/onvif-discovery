@@ -166,7 +166,7 @@ namespace OnvifDiscovery
 
 		bool IsFromProbeMessage (Guid messageId, XmlProbeReponse response)
 		{
-			return response.Header.RelatesTo.Contains (messageId.ToString ());
+			return response?.Header?.RelatesTo.Contains (messageId.ToString ()) ?? false;
 		}
 	}
 }
