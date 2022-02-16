@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsdd="http://schemas.xmlsoap.org/ws/2005/04/discovery" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:dn="http://www.onvif.org/ver10/network/wsdl">
+	<SOAP-ENV:Body>
+		<wsdd:ProbeMatches>
+			<wsdd:ProbeMatch>
+				<wsa:EndpointReference>
+					<wsa:Address>uuid:{0}</wsa:Address>
+				</wsa:EndpointReference>
+				<wsdd:Types>dn:NetworkVideoTransmitter</wsdd:Types>
+				<wsdd:Scopes>onvif://www.onvif.org/Profile/Streaming onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/audio_encoder onvif://www.onvif.org/hardware/{1} onvif://www.onvif.org/name/{2} onvif://www.onvif.org/location/Default</wsdd:Scopes>
+				<wsdd:XAddrs>http://{3}/onvif/device_service</wsdd:XAddrs>
+				<wsdd:MetadataVersion>1</wsdd:MetadataVersion>
+			</wsdd:ProbeMatch>
+		</wsdd:ProbeMatches>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

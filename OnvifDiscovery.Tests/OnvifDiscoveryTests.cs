@@ -188,7 +188,7 @@ namespace OnvifDiscovery.Tests
 							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
 							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
 						})
-						.ThrowsAsync (new Exception())
+						.ThrowsAsync (new Exception ())
 						.Returns (async () => {
 							var ip = $"192.168.1.2";
 							await Task.Delay (700);
@@ -200,18 +200,18 @@ namespace OnvifDiscovery.Tests
 							await Task.Delay (400);
 							camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", ip);
 							return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse (ip));
-						 });
+						});
 
 			// Act
 			var discoveredDevices = await wSDiscovery.Discover (1);
 
 			// Arrange
-			discoveredDevices.Should().NotBeEmpty();
-			discoveredDevices.Should().HaveCount(2);
+			discoveredDevices.Should ().NotBeEmpty ();
+			discoveredDevices.Should ().HaveCount (2);
 		}
 
 		[Fact]
-		public async Task Discover_DuplicatedResultsFromMultipleInterfaces_ResultDoesNotHaveDuplications()
+		public async Task Discover_DuplicatedResultsFromMultipleInterfaces_ResultDoesNotHaveDuplications ()
 		{
 			// Arrange
 			var cameraA = new TestCamera (Guid.NewGuid (), Guid.NewGuid (), "AxisHardware", "AxisName", "192.168.1.12");
@@ -246,5 +246,45 @@ namespace OnvifDiscovery.Tests
 			discoveredDevices.Should ().HaveCount (1);
 		}
 
+		[Fact]
+		public async Task Discover_ResponseWithNullHeader_DiscardsAndNotCrash ()
+		{
+			// Arrange
+			bool firstTime = true;
+			Guid messageId = Guid.NewGuid ();
+			TestCamera camera = null;
+			Mock<IOnvifUdpClient> udpClientMock = new Mock<IOnvifUdpClient> ();
+			udpClientFactoryMock.Setup (cf => cf.CreateClientForeachInterface ()).Returns (new List<IOnvifUdpClient> { udpClientMock.Object });
+			udpClientMock.Setup (cl => cl.SendProbeAsync (It.IsAny<Guid> (), It.IsAny<IPEndPoint> ()))
+				.ReturnsAsync (200)
+				.Callback<Guid, IPEndPoint> ((mId, endpoint) => {
+					messageId = mId;
+				});
+			udpClientMock.Setup (udp => udp.ReceiveAsync ())
+						.ReturnsAsync (() => {
+							if (firstTime) {
+								firstTime = false;
+								camera = new TestCamera (messageId, Guid.NewGuid (), "AxisHardware", "AxisName", "192.168.1.12");
+								return new UdpReceiveResult (Utils.CreateProbeResponse (camera), IPEndPoint.Parse ("192.168.1.12"));
+							} else {
+								var cam = new TestCamera (messageId, Guid.NewGuid (), "SamsungHardware", "SamsungName", "192.168.1.14");
+								return new UdpReceiveResult (Utils.CreateProbeResponseWithNullHeader (cam), IPEndPoint.Parse ("192.168.1.14"));
+							}
+						});
+
+			// Act
+			var discoveredDevices = await wSDiscovery.Discover (1);
+
+			// Assert
+			discoveredDevices.Should ().HaveCount (1);
+			var firstDevice = discoveredDevices.ElementAt (0);
+			firstDevice.Address.Should ().Be (camera.IP);
+			firstDevice.Model.Should ().Be (camera.Model);
+			firstDevice.Mfr.Should ().Be (camera.Manufacturer);
+
+			udpClientFactoryMock.Verify (cf => cf.CreateClientForeachInterface (), Times.Once);
+			udpClientMock.Verify (c => c.SendProbeAsync (It.IsAny<Guid> (), It.IsAny<IPEndPoint> ()), Times.Once);
+			udpClientMock.Verify (c => c.ReceiveAsync (), Times.AtLeast (2));
+		}
 	}
 }

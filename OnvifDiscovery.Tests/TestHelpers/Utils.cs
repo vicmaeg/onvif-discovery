@@ -14,5 +14,14 @@ namespace OnvifDiscovery.Tests.TestHelpers
 
 			return Encoding.ASCII.GetBytes (modifiedResponse);
 		}
+
+		public static byte[] CreateProbeResponseWithNullHeader (TestCamera camera)
+		{
+			string templateResponse = File.ReadAllText ("Resources/response_no_header.txt");
+			string modifiedResponse = String.Format (templateResponse, camera.Address,
+				camera.Model, camera.Manufacturer, camera.IP);
+
+			return Encoding.ASCII.GetBytes (modifiedResponse);
+		}
 	}
 }
