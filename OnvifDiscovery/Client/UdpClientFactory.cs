@@ -1,26 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using OnvifDiscovery.Interfaces;
 
-namespace OnvifDiscovery.Client
+namespace OnvifDiscovery.Client;
+
+internal class UdpClientFactory : IUdpClientFactory
 {
-	internal class UdpClientFactory : IUdpClientFactory
+	public IOnvifUdpClient CreateClient (IPEndPoint endpoint)
 	{
-		public IOnvifUdpClient CreateClient (IPEndPoint endpoint)
-		{
-			return new OnvifUdpClient (endpoint);
-		}
+		return new OnvifUdpClient (endpoint);
+	}
 
-		public IEnumerable<IOnvifUdpClient> CreateClientForeachInterface ()
-		{
-			var clients = new List<IOnvifUdpClient> ();
+	public IEnumerable<IOnvifUdpClient> CreateClientForeachInterface ()
+	{
+		var clients = new List<IOnvifUdpClient> ();
 
-			NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
-			foreach (NetworkInterface adapter in nics) {
+		NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces ();
+		foreach (NetworkInterface adapter in nics) {
 
 				if (!IsValidAdapter (adapter)) { continue; }
 				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
@@ -36,17 +33,16 @@ namespace OnvifDiscovery.Client
 					}
 				}
 			}
-			return clients;
-		}
+		return clients;
+	}
 
-		bool IsValidAdapter (NetworkInterface adapter)
-		{
-			// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
-			if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
-				!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) return false;
-			if (adapter.OperationalStatus == OperationalStatus.Down) { return false; }
-			if (!adapter.Supports (NetworkInterfaceComponent.IPv4)) { return false; }
-			return true;
-		}
+	bool IsValidAdapter (NetworkInterface adapter)
+	{
+		// Only select interfaces that are Ethernet type and support IPv4 (important to minimize waiting time)
+		if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet &&
+			!adapter.NetworkInterfaceType.ToString ().ToLower ().StartsWith ("wireless")) return false;
+		if (adapter.OperationalStatus == OperationalStatus.Down) { return false; }
+		if (!adapter.Supports (NetworkInterfaceComponent.IPv4)) { return false; }
+		return true;
 	}
 }
