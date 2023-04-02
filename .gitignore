@@ -290,6 +290,7 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+.fleet/
 
 # CodeRush
 .cr/
