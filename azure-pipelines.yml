@@ -20,7 +20,7 @@ steps:
       SonarCloud: "sonarcloud"
       organization: "vmartos"
       scannerMode: "MSBuild"
-      projectKey: "vmartos_OnvifSharp"
+      projectKey: "vicmaeg_onvif-discovery"
       projectVersion:
       extraProperties: |
         sonar.exclusions=**/bin/**/*,**/obj/**/*,OnvifDiscovery/Client/OnvifUdpClient.cs
