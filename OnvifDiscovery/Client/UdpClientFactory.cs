@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -23,9 +24,9 @@ namespace OnvifDiscovery.Client
 
 				if (!IsValidAdapter (adapter)) { continue; }
 				IPInterfaceProperties adapterProperties = adapter.GetIPProperties ();
-				foreach (var ua in adapterProperties.UnicastAddresses) {
-					if (ua.Address.AddressFamily == AddressFamily.InterNetwork) {
-						IPEndPoint myLocalEndPoint = new IPEndPoint (ua.Address, 0); // port does not matter
+				foreach (var address in adapterProperties.UnicastAddresses.Select (ua => ua.Address)) {
+					if (address.AddressFamily == AddressFamily.InterNetwork) {
+						IPEndPoint myLocalEndPoint = new IPEndPoint (address, 0); // port does not matter
 						try {
 							IOnvifUdpClient client = CreateClient (myLocalEndPoint);
 							clients.Add (client);

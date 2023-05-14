@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 namespace OnvifDiscovery.Client
 {
 	/// <summary>
-	/// A simple Udp client that wrapps <see cref="System.Net.Sockets.UdpClient"/>
+	/// A simple Udp client that wraps <see cref="System.Net.Sockets.UdpClient"/>
 	/// It creates the probe messages also
 	/// </summary>
 	internal class OnvifUdpClient : IOnvifUdpClient
 	{
-		readonly UdpClient client;
+		private readonly UdpClient client;
 
-		public OnvifUdpClient (IPEndPoint localpoint)
+		public OnvifUdpClient (IPEndPoint localEndpoint)
 		{
-			client = new UdpClient (localpoint) {
+			client = new UdpClient (localEndpoint) {
 				EnableBroadcast = true
 			};
 		}

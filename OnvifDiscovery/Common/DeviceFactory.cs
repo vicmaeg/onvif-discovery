@@ -31,21 +31,26 @@ namespace OnvifDiscovery.Common
 		{
 			var scopesArray = scopes.Split ();
 			var nameQuery = scopesArray.Where (scope => scope.Contains ("name/")).ToArray ();
-			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/") || scope.Contains ("manufacturer/")).ToArray ();
+			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/") || scope.Contains ("manufacturer/"))
+				.ToArray ();
 			if (mfrQuery.Length > 0) {
 				var match = Regex.Match (mfrQuery[0], Constants.PATTERN);
-				return Uri.UnescapeDataString(match.Groups[6].Value);
+				return Uri.UnescapeDataString (match.Groups[6].Value);
 			}
+
 			if (nameQuery.Length > 0) {
 				var match = Regex.Match (nameQuery[0], Constants.PATTERN);
-				string temp = Uri.UnescapeDataString(match.Groups[6].Value);
+				string temp = Uri.UnescapeDataString (match.Groups[6].Value);
 				if (temp.Contains (' ')) {
 					temp = temp.Split ()[0];
 				}
+
 				return temp;
 			}
+
 			return string.Empty;
 		}
+
 
 		private static IEnumerable<string> ConvertToList (string spacedListString)
 		{
