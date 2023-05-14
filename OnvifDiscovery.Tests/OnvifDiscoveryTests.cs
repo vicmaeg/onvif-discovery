@@ -17,8 +17,8 @@ namespace OnvifDiscovery.Tests
 {
 	public class OnvifDiscoveryTests
 	{
-		Discovery wSDiscovery;
-		Mock<IUdpClientFactory> udpClientFactoryMock;
+		private readonly Discovery wSDiscovery;
+		private readonly Mock<IUdpClientFactory> udpClientFactoryMock;
 
 		public OnvifDiscoveryTests ()
 		{
