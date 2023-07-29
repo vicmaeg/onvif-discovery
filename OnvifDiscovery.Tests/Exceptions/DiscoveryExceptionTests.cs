@@ -1,4 +1,5 @@
 ﻿using System.Runtime.Serialization.Formatters.Binary;
+using FluentAssertions;
 using OnvifDiscovery.Exceptions;
 using Xunit;
 
@@ -16,8 +17,8 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException();
 
         // Assert
-        Assert.Null(sut.InnerException);
-        Assert.Equal(expectedMessage, sut.Message);
+        sut.InnerException.Should().BeNull();
+        sut.Message.Should().Be(expectedMessage);
     }
 
     [Fact]
@@ -30,8 +31,8 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException(expectedMessage);
 
         // Assert
-        Assert.Null(sut.InnerException);
-        Assert.Equal(expectedMessage, sut.Message);
+        sut.InnerException.Should().BeNull();
+        sut.Message.Should().Be(expectedMessage);
     }
 
     [Fact]
@@ -45,8 +46,8 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException(expectedMessage, innerEx);
 
         // Assert
-        Assert.Equal(innerEx, sut.InnerException);
-        Assert.Equal(expectedMessage, sut.Message);
+        sut.InnerException.Should().Be(innerEx);
+        sut.Message.Should().Be(expectedMessage);
     }
 
     [Fact]
@@ -65,7 +66,8 @@ public class DiscoveryExceptionTests
         var deserializedException = (DiscoveryException)formatter.Deserialize(ms2);
 
         // Assert
-        Assert.Equal(originalException.InnerException.Message, deserializedException.InnerException.Message);
-        Assert.Equal(originalException.Message, deserializedException.Message);
+        deserializedException.Should().NotBeNull();
+        deserializedException.InnerException.Should().NotBeNull();
+        deserializedException.Message.Should().Be(originalException.Message);
     }
 }

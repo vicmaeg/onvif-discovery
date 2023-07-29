@@ -22,7 +22,7 @@ void onNewDevice(DiscoveryDevice device)
         Console.WriteLine(
             $"Device model {device.Model} from manufacturer {device.Mfr} has address {device.Address}");
         Console.Write("Urls to device: ");
-        foreach (var address in device.XAdresses)
+        foreach (var address in device.XAddresses)
         {
             Console.Write($"{address}, ");
         }

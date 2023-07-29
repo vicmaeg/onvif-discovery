@@ -6,20 +6,22 @@ namespace OnvifDiscovery.Common;
 
 internal static class DeviceFactory
 {
+    private const int RegexProcessingTimeoutInMs = 500;
+
     internal static DiscoveryDevice CreateDevice(ProbeMatch probeMatch, IPEndPoint remoteEndpoint) =>
-        new()
-        {
-            Address = remoteEndpoint.Address.ToString(),
-            Model = ParseModelFromScopes(probeMatch.Scopes),
-            Mfr = ParseMfrFromScopes(probeMatch.Scopes),
-            XAdresses = ConvertToList(probeMatch.XAddrs),
-            Types = ConvertToList(probeMatch.Types),
-            Scopes = ConvertToList(probeMatch.Scopes)
-        };
+        new(
+            ConvertToList(probeMatch.Types),
+            ConvertToList(probeMatch.XAddrs),
+            ParseModelFromScopes(probeMatch.Scopes),
+            ParseMfrFromScopes(probeMatch.Scopes),
+            remoteEndpoint.Address.ToString(),
+            ConvertToList(probeMatch.Scopes)
+        );
 
     private static string ParseModelFromScopes(string scopes)
     {
-        var model = Regex.Match(scopes, "(?<=hardware/).*?(?= )")?.Value ?? string.Empty;
+        var model = Regex.Match(scopes, "(?<=hardware/).*?(?= )", RegexOptions.None,
+            TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs)).Value;
         return Uri.UnescapeDataString(model);
     }
 
@@ -31,23 +33,25 @@ internal static class DeviceFactory
             .ToArray();
         if (mfrQuery.Length > 0)
         {
-            var match = Regex.Match(mfrQuery[0], Constants.PATTERN);
-            return Uri.UnescapeDataString(match.Groups[6].Value);
+            var mfrMatch = Regex.Match(mfrQuery[0], Constants.PATTERN, RegexOptions.None,
+                TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs));
+            return Uri.UnescapeDataString(mfrMatch.Groups[6].Value);
         }
 
-        if (nameQuery.Length > 0)
+        if (nameQuery.Length <= 0)
         {
-            var match = Regex.Match(nameQuery[0], Constants.PATTERN);
-            var temp = Uri.UnescapeDataString(match.Groups[6].Value);
-            if (temp.Contains(' '))
-            {
-                temp = temp.Split()[0];
-            }
-
-            return temp;
+            return string.Empty;
         }
 
-        return string.Empty;
+        var nameMatch = Regex.Match(nameQuery[0], Constants.PATTERN, RegexOptions.None,
+            TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs));
+        var mfr = Uri.UnescapeDataString(nameMatch.Groups[6].Value);
+        if (mfr.Contains(' '))
+        {
+            mfr = mfr.Split()[0];
+        }
+
+        return mfr;
     }
 
     private static IEnumerable<string> ConvertToList(string spacedListString)

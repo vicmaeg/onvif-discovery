@@ -40,14 +40,14 @@ public class OnvifDiscoveryTests
         // Arrange
         var firstTime = true;
         var messageId = Guid.NewGuid();
-        TestCamera camera1 = null;
-        TestCamera camera2 = null;
+        TestCamera? camera1 = null;
+        TestCamera? camera2 = null;
         var udpClientMock = new Mock<IOnvifUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IOnvifUdpClient> { udpClientMock.Object });
         udpClientMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId = mId; });
         udpClientMock.Setup(udp => udp.ReceiveAsync())
             .ReturnsAsync(() =>
             {
@@ -67,13 +67,14 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.Discover(1);
 
         // Assert
-        discoveredDevices.Should().HaveCount(2);
-        var firstDevice = discoveredDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera1.IP);
+        var discoveryDevices = discoveredDevices.ToList();
+        discoveryDevices.Should().HaveCount(2);
+        var firstDevice = discoveryDevices.ElementAt(0);
+        firstDevice.Address.Should().Be(camera1!.IP);
         firstDevice.Model.Should().Be(camera1.Model);
         firstDevice.Mfr.Should().Be(camera1.Manufacturer);
-        var secondDevice = discoveredDevices.ElementAt(1);
-        secondDevice.Address.Should().Be(camera2.IP);
+        var secondDevice = discoveryDevices.ElementAt(1);
+        secondDevice.Address.Should().Be(camera2!.IP);
         secondDevice.Model.Should().Be(camera2.Model);
         secondDevice.Mfr.Should().Be(camera2.Manufacturer);
 
@@ -88,18 +89,18 @@ public class OnvifDiscoveryTests
         // Arrange
         var messageId1 = Guid.NewGuid();
         var messageId2 = Guid.NewGuid();
-        TestCamera camera1 = null;
-        TestCamera camera2 = null;
+        TestCamera? camera1 = null;
+        TestCamera? camera2 = null;
         var udpClient1Mock = new Mock<IOnvifUdpClient>();
         var udpClient2Mock = new Mock<IOnvifUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IOnvifUdpClient>
             { udpClient1Mock.Object, udpClient2Mock.Object });
         udpClient1Mock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId1 = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId1 = mId; });
         udpClient2Mock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId2 = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId2 = mId; });
         udpClient1Mock.Setup(udp => udp.ReceiveAsync())
             .ReturnsAsync(() =>
             {
@@ -119,13 +120,14 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.Discover(1);
 
         // Assert
-        discoveredDevices.Should().HaveCount(2);
-        var firstDevice = discoveredDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera1.IP);
+        var discoveryDevices = discoveredDevices.ToList();
+        discoveryDevices.Should().HaveCount(2);
+        var firstDevice = discoveryDevices.ElementAt(0);
+        firstDevice.Address.Should().Be(camera1!.IP);
         firstDevice.Model.Should().Be(camera1.Model);
         firstDevice.Mfr.Should().Be(camera1.Manufacturer);
-        var secondDevice = discoveredDevices.ElementAt(1);
-        secondDevice.Address.Should().Be(camera2.IP);
+        var secondDevice = discoveryDevices.ElementAt(1);
+        secondDevice.Address.Should().Be(camera2!.IP);
         secondDevice.Model.Should().Be(camera2.Model);
         secondDevice.Mfr.Should().Be(camera2.Manufacturer);
 
@@ -139,13 +141,12 @@ public class OnvifDiscoveryTests
     {
         // Arrange
         var messageId = Guid.NewGuid();
-        TestCamera camera = null;
         var udpClientMock = new Mock<IOnvifUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IOnvifUdpClient> { udpClientMock.Object });
         udpClientMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId = mId; });
         var cameraNumber = 1;
         udpClientMock.Setup(udp => udp.ReceiveAsync())
             .Returns(async () =>
@@ -153,7 +154,7 @@ public class OnvifDiscoveryTests
                 await Task.Delay(500).ConfigureAwait(false);
                 var ip = $"192.168.1.{cameraNumber}";
                 cameraNumber++;
-                camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
+                var camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
                 return new UdpReceiveResult(Utils.CreateProbeResponse(camera), IPEndPoint.Parse(ip));
             });
 
@@ -172,18 +173,17 @@ public class OnvifDiscoveryTests
     {
         // Arrange
         var messageId = Guid.NewGuid();
-        TestCamera camera = null;
         var udpClientMock = new Mock<IOnvifUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IOnvifUdpClient> { udpClientMock.Object });
         udpClientMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId = mId; });
         udpClientMock.SetupSequence(udp => udp.ReceiveAsync())
             .ReturnsAsync(() =>
             {
                 var ip = "192.168.1.1";
-                camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
+                var camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
                 return new UdpReceiveResult(Utils.CreateProbeResponse(camera), IPEndPoint.Parse(ip));
             })
             .ThrowsAsync(new Exception())
@@ -191,14 +191,14 @@ public class OnvifDiscoveryTests
             {
                 var ip = "192.168.1.2";
                 await Task.Delay(700);
-                camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
+                var camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
                 return new UdpReceiveResult(Utils.CreateProbeResponse(camera), IPEndPoint.Parse(ip));
             })
             .Returns(async () =>
             {
                 var ip = "192.168.1.3";
                 await Task.Delay(400);
-                camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
+                var camera = new TestCamera(messageId, Guid.NewGuid(), "AxisHardware", "AxisName", ip);
                 return new UdpReceiveResult(Utils.CreateProbeResponse(camera), IPEndPoint.Parse(ip));
             });
 
@@ -206,7 +206,6 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.Discover(1);
 
         // Arrange
-        discoveredDevices.Should().NotBeEmpty();
         discoveredDevices.Should().HaveCount(2);
     }
 
@@ -222,10 +221,10 @@ public class OnvifDiscoveryTests
             { udpClientAMock.Object, udpClientBMock.Object });
         udpClientAMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { cameraA.MessageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { cameraA.MessageId = mId; });
         udpClientBMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { cameraB.MessageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { cameraB.MessageId = mId; });
         udpClientAMock.Setup(udp => udp.ReceiveAsync())
             .ReturnsAsync(() =>
             {
@@ -241,23 +240,22 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.Discover(1);
 
         // Arrange
-        discoveredDevices.Should().NotBeEmpty();
         discoveredDevices.Should().HaveCount(1);
     }
 
     [Fact]
-    public async Task Discover_ResponseWithNullHeader_DiscardsAndNotCrash()
+    public async Task Discover_ResponseWithNoHeader_DiscardsAndNotCrash()
     {
         // Arrange
         var firstTime = true;
         var messageId = Guid.NewGuid();
-        TestCamera camera = null;
+        TestCamera? camera = null;
         var udpClientMock = new Mock<IOnvifUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IOnvifUdpClient> { udpClientMock.Object });
         udpClientMock.Setup(cl => cl.SendProbeAsync(It.IsAny<Guid>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<Guid, IPEndPoint>((mId, endpoint) => { messageId = mId; });
+            .Callback<Guid, IPEndPoint>((mId, _) => { messageId = mId; });
         udpClientMock.Setup(udp => udp.ReceiveAsync())
             .ReturnsAsync(() =>
             {
@@ -277,9 +275,10 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.Discover(1);
 
         // Assert
-        discoveredDevices.Should().HaveCount(1);
-        var firstDevice = discoveredDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera.IP);
+        var discoveryDevices = discoveredDevices.ToList();
+        discoveryDevices.Should().HaveCount(1);
+        var firstDevice = discoveryDevices[0];
+        firstDevice.Address.Should().Be(camera!.IP);
         firstDevice.Model.Should().Be(camera.Model);
         firstDevice.Mfr.Should().Be(camera.Manufacturer);
 

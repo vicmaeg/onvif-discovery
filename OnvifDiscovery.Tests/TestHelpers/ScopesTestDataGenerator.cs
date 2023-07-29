@@ -10,7 +10,7 @@ public class ScopesTestDataGenerator : IEnumerable<object[]>
     public ScopesTestDataGenerator()
     {
         var scopesTestDataText = File.ReadAllText("Resources/ScopesTestData.json");
-        scopesTestData = JsonSerializer.Deserialize<ScopesTestData>(scopesTestDataText);
+        scopesTestData = JsonSerializer.Deserialize<ScopesTestData>(scopesTestDataText)!;
     }
 
     public IEnumerator<object[]> GetEnumerator()

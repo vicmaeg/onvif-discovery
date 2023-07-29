@@ -72,8 +72,8 @@ public class DeviceFactoryTests
         var device = DeviceFactory.CreateDevice(probeMatch, remoteEndpoint);
 
         // Assert
-        device.XAdresses.Should().HaveCount(2);
-        device.XAdresses.Should().BeEquivalentTo(device1, device2);
+        device.XAddresses.Should().HaveCount(2);
+        device.XAddresses.Should().BeEquivalentTo(device1, device2);
     }
 
     [Fact]

@@ -18,5 +18,5 @@ public interface IUdpClientFactory
     ///     Creates an <see cref="IOnvifUdpClient" /> for each valid network interface
     /// </summary>
     /// <returns>A list of <see cref="IOnvifUdpClient" /></returns>
-    IEnumerable<IOnvifUdpClient> CreateClientForeachInterface();
+    IReadOnlyCollection<IOnvifUdpClient> CreateClientForeachInterface();
 }

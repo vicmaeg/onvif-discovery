@@ -87,7 +87,7 @@ public class Discovery : IDiscovery
         return devices;
     }
 
-    private async Task Discover(int timeout, IOnvifUdpClient client,
+    private static async Task Discover(int timeout, IOnvifUdpClient client,
         Action<DiscoveryDevice> onDeviceDiscovered,
         CancellationToken cancellationToken = default)
     {
@@ -121,7 +121,7 @@ public class Discovery : IDiscovery
                     if (discoveredDevice != null)
                     {
 #pragma warning disable 4014 // Just trigger the callback and forget about it. This is expected to avoid locking the loop
-                        Task.Run(() => onDeviceDiscovered(discoveredDevice));
+                        Task.Run(() => onDeviceDiscovered(discoveredDevice), CancellationToken.None);
 #pragma warning restore 4014
                     }
                 } catch (OperationCanceledException)
@@ -139,49 +139,42 @@ public class Discovery : IDiscovery
         }
     }
 
-    private async Task SendProbe(IOnvifUdpClient client, Guid messageId)
+    private static async Task SendProbe(IOnvifUdpClient client, Guid messageId)
     {
         var multicastEndpoint =
             new IPEndPoint(IPAddress.Parse(Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
         await client.SendProbeAsync(messageId, multicastEndpoint);
     }
 
-    private DiscoveryDevice ProcessResponse(UdpReceiveResult response, Guid messageId)
+    private static DiscoveryDevice? ProcessResponse(UdpReceiveResult response, Guid messageId)
     {
-        if (response.Buffer != null)
+        var strResponse = Encoding.UTF8.GetString(response.Buffer);
+        var xmlResponse = DeserializeResponse(strResponse);
+        if (IsFromProbeMessage(messageId, xmlResponse)
+            && xmlResponse!.Body.ProbeMatches.Any()
+            && !string.IsNullOrEmpty(xmlResponse.Body.ProbeMatches[0].Scopes))
         {
-            var strResponse = Encoding.UTF8.GetString(response.Buffer);
-            var xmlResponse = DeserializeResponse(strResponse);
-            if (IsFromProbeMessage(messageId, xmlResponse)
-                && xmlResponse.Body.ProbeMatches.Any()
-                && !string.IsNullOrEmpty(xmlResponse.Body.ProbeMatches[0].Scopes))
-            {
-                return DeviceFactory.CreateDevice(xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
-            }
+            return DeviceFactory.CreateDevice(xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
         }
 
         return null;
     }
 
-    private XmlProbeReponse DeserializeResponse(string xml)
+    private static XmlProbeResponse? DeserializeResponse(string xml)
     {
-        var serializer = new XmlSerializer(typeof(XmlProbeReponse));
+        var serializer = new XmlSerializer(typeof(XmlProbeResponse));
         var settings = new XmlReaderSettings();
-        using (var textReader = new StringReader(xml))
-        {
-            using (var xmlReader = XmlReader.Create(textReader, settings))
-            {
-                return (XmlProbeReponse)serializer.Deserialize(xmlReader);
-            }
-        }
+        using var textReader = new StringReader(xml);
+        using var xmlReader = XmlReader.Create(textReader, settings);
+        return serializer.Deserialize(xmlReader) as XmlProbeResponse;
     }
 
-    private bool IsAlreadyDiscovered(UdpReceiveResult device, List<UdpReceiveResult> devices)
+    private static bool IsAlreadyDiscovered(UdpReceiveResult device, List<UdpReceiveResult> devices)
     {
         var deviceEndpointString = device.RemoteEndPoint.ToString();
-        return devices.Any(d => d.RemoteEndPoint.ToString().Equals(deviceEndpointString));
+        return devices.Exists(d => d.RemoteEndPoint.ToString().Equals(deviceEndpointString));
     }
 
-    private bool IsFromProbeMessage(Guid messageId, XmlProbeReponse response) =>
-        response?.Header?.RelatesTo.Contains(messageId.ToString()) ?? false;
+    private static bool IsFromProbeMessage(Guid messageId, XmlProbeResponse? response) =>
+        response?.Header.RelatesTo.Contains(messageId.ToString()) ?? false;
 }
