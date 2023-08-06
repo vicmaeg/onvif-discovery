@@ -1,16 +1,5 @@
-﻿using System.Collections.Generic;
+﻿namespace OnvifDiscovery.Tests.TestHelpers;
 
-namespace OnvifDiscovery.Tests.TestHelpers
-{
-	internal class ScopesTestData
-	{
-		public IEnumerable<ScopeTestData> Devices { get; set; }
-	}
+internal record ScopesTestData(IEnumerable<ScopeTestDataItem> Devices);
 
-	public class ScopeTestData
-	{
-		public IEnumerable<string> Scopes { get; set; }
-		public string ExpectedModel { get; set; }
-		public string ExpectedMfr { get; set; }
-	}
-}
+internal record ScopeTestDataItem(IEnumerable<string> Scopes, string ExpectedModel, string ExpectedMfr);

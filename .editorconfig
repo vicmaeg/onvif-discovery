@@ -1,41 +1,105 @@
-﻿# See: http://kent-boogaart.com/blog/editorconfig-reference-for-c-developers for all options and
-# reference
-
-# This file is the top-most EditorConfig file
 root = true
+# See: http://kent-boogaart.com/blog/editorconfig-reference-for-c-developers for all options and reference
 
 # All Files
 [*]
 end_of_line = lf
-insert_final_newline = true
+insert_final_newline = false
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Microsoft .NET properties
+dotnet_naming_rule.private_constants_rule.severity = warning
+dotnet_naming_rule.private_constants_rule.style = upper_camel_case_style
+dotnet_naming_rule.private_constants_rule.symbols = private_constants_symbols
+dotnet_naming_rule.private_instance_fields_rule.severity = warning
+dotnet_naming_rule.private_instance_fields_rule.style = lower_camel_case_style
+dotnet_naming_rule.private_instance_fields_rule.symbols = private_instance_fields_symbols
+dotnet_naming_rule.private_static_fields_override_rule.severity = warning
+dotnet_naming_rule.private_static_fields_override_rule.style = upper_camel_case_style
+dotnet_naming_rule.private_static_fields_override_rule.symbols = private_static_fields_override_symbols
+dotnet_naming_rule.private_static_fields_rule.severity = warning
+dotnet_naming_rule.private_static_fields_rule.style = lower_camel_case_style
+dotnet_naming_rule.private_static_fields_rule.symbols = private_static_fields_symbols
+dotnet_naming_rule.private_static_fields_rule_1.severity = warning
+dotnet_naming_rule.private_static_fields_rule_1.style = lower_camel_case_style
+dotnet_naming_rule.private_static_fields_rule_1.symbols = private_static_fields_symbols_1
+dotnet_naming_rule.private_static_readonly_rule.severity = warning
+dotnet_naming_rule.private_static_readonly_rule.style = upper_camel_case_style
+dotnet_naming_rule.private_static_readonly_rule.symbols = private_static_readonly_symbols
+dotnet_naming_style.lower_camel_case_style.capitalization = camel_case
+dotnet_naming_style.upper_camel_case_style.capitalization = pascal_case
+dotnet_naming_symbols.private_constants_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_constants_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_constants_symbols.required_modifiers = const
+dotnet_naming_symbols.private_instance_fields_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_instance_fields_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields_override_symbols.applicable_accessibilities = local, private
+dotnet_naming_symbols.private_static_fields_override_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields_override_symbols.required_modifiers = const, static
+dotnet_naming_symbols.private_static_fields_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields_symbols.required_modifiers = static
+dotnet_naming_symbols.private_static_fields_symbols_1.applicable_accessibilities = local, private
+dotnet_naming_symbols.private_static_fields_symbols_1.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields_symbols_1.required_modifiers = static
+dotnet_naming_symbols.private_static_readonly_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_symbols.required_modifiers = static, readonly
+dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:none
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:none
+dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary:none
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# ReSharper properties
+resharper_braces_for_for = required
+resharper_braces_for_foreach = required
+resharper_braces_for_ifelse = required
+resharper_braces_for_while = required
+resharper_braces_redundant = false
+resharper_local_function_body = expression_body
+resharper_method_or_operator_body = expression_body
+
+# ReSharper inspection severities
+
 
 [*.cs]
-indent_style = tab
-indent_size = 4
-csharp_new_line_before_open_brace = types,methods
 csharp_indent_block_contents = true
 csharp_indent_switch_labels = true
 csharp_indent_case_contents = true
 csharp_space_before_open_square_brackets = false
-csharp_space_between_method_declaration_name_and_open_parenthesis = true
-csharp_space_between_method_call_name_and_opening_parenthesis = true
 csharp_space_after_keywords_in_control_flow_statements = true
 csharp_space_before_colon_in_inheritance_clause = true
 csharp_space_after_colon_in_inheritance_clause = true
 csharp_space_around_binary_operators = before_and_after
 csharp_space_after_comma = true
 csharp_space_around_declaration_statements = do_not_ignore
-csharp_new_line_before_else = false
-csharp_new_line_before_catch = false
-csharp_new_line_before_finally = false
 csharp_prefer_braces = true
-
-[*.xaml]
-indent_style = space
-indent_size = 4
+csharp_new_line_before_catch = false
+csharp_new_line_before_else = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_open_brace = all
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion
+csharp_style_var_elsewhere = true:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
 
 # Xml project files
 [*.{sln,csproj,shproj,projitems,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
-indent_style = space
 indent_size = 2
+
+[{*.har,*.jsb2,*.jsb3,*.json,.babelrc,.eslintrc,.stylelintrc,bowerrc,jest.config}]
+indent_size = 2
+
+[*.{appxmanifest,asax,ascx,aspx,axaml,build,c,c++,cc,cginc,compute,cp,cpp,cs,cshtml,cu,cuh,cxx,dtd,fs,fsi,fsscript,fsx,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,ixx,master,ml,mli,mpp,mq4,mq5,mqh,nuspec,paml,razor,resw,resx,shader,skin,tpp,usf,ush,vb,xaml,xamlx,xoml,xsd}]
+tab_width = 4

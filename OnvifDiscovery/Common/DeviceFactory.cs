@@ -1,63 +1,65 @@
-﻿using OnvifDiscovery.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text.RegularExpressions;
+using OnvifDiscovery.Models;
 
-namespace OnvifDiscovery.Common
+namespace OnvifDiscovery.Common;
+
+internal static class DeviceFactory
 {
-	internal static class DeviceFactory
-	{
-		internal static DiscoveryDevice CreateDevice(ProbeMatch probeMatch, IPEndPoint remoteEndpoint)
-		{
-			return new DiscoveryDevice {
-				Address = remoteEndpoint.Address.ToString (),
-				Model = ParseModelFromScopes (probeMatch.Scopes),
-				Mfr = ParseMfrFromScopes (probeMatch.Scopes),
-				XAdresses = ConvertToList (probeMatch.XAddrs),
-				Types = ConvertToList (probeMatch.Types),
-				Scopes = ConvertToList (probeMatch.Scopes)
-			};
-		}
+    private const int RegexProcessingTimeoutInMs = 500;
 
-		private static string ParseModelFromScopes(string scopes)
-		{
-			var model = Regex.Match (scopes, "(?<=hardware/).*?(?= )")?.Value ?? string.Empty;
-			return Uri.UnescapeDataString (model);
-		}
+    internal static DiscoveryDevice CreateDevice(ProbeMatch probeMatch, IPEndPoint remoteEndpoint) =>
+        new(
+            ConvertToList(probeMatch.Types),
+            ConvertToList(probeMatch.XAddrs),
+            ParseModelFromScopes(probeMatch.Scopes),
+            ParseMfrFromScopes(probeMatch.Scopes),
+            remoteEndpoint.Address.ToString(),
+            ConvertToList(probeMatch.Scopes)
+        );
 
-		private static string ParseMfrFromScopes (string scopes)
-		{
-			var scopesArray = scopes.Split ();
-			var nameQuery = scopesArray.Where (scope => scope.Contains ("name/")).ToArray ();
-			var mfrQuery = scopesArray.Where (scope => scope.Contains ("mfr/") || scope.Contains ("manufacturer/"))
-				.ToArray ();
-			if (mfrQuery.Length > 0) {
-				var match = Regex.Match (mfrQuery[0], Constants.PATTERN);
-				return Uri.UnescapeDataString (match.Groups[6].Value);
-			}
+    private static string ParseModelFromScopes(string scopes)
+    {
+        var model = Regex.Match(scopes, "(?<=hardware/).*?(?= )", RegexOptions.None,
+            TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs)).Value;
+        return Uri.UnescapeDataString(model);
+    }
 
-			if (nameQuery.Length > 0) {
-				var match = Regex.Match (nameQuery[0], Constants.PATTERN);
-				string temp = Uri.UnescapeDataString (match.Groups[6].Value);
-				if (temp.Contains (' ')) {
-					temp = temp.Split ()[0];
-				}
+    private static string ParseMfrFromScopes(string scopes)
+    {
+        var scopesArray = scopes.Split();
+        var nameQuery = scopesArray.Where(scope => scope.Contains("name/")).ToArray();
+        var mfrQuery = scopesArray.Where(scope => scope.Contains("mfr/") || scope.Contains("manufacturer/"))
+            .ToArray();
+        if (mfrQuery.Length > 0)
+        {
+            var mfrMatch = Regex.Match(mfrQuery[0], Constants.PATTERN, RegexOptions.None,
+                TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs));
+            return Uri.UnescapeDataString(mfrMatch.Groups[6].Value);
+        }
 
-				return temp;
-			}
+        if (nameQuery.Length <= 0)
+        {
+            return string.Empty;
+        }
 
-			return string.Empty;
-		}
+        var nameMatch = Regex.Match(nameQuery[0], Constants.PATTERN, RegexOptions.None,
+            TimeSpan.FromMilliseconds(RegexProcessingTimeoutInMs));
+        var mfr = Uri.UnescapeDataString(nameMatch.Groups[6].Value);
+        if (mfr.Contains(' '))
+        {
+            mfr = mfr.Split()[0];
+        }
 
+        return mfr;
+    }
 
-		private static IEnumerable<string> ConvertToList (string spacedListString)
-		{
-			var strings = spacedListString.Split ();
-			foreach (var str in strings) {
-				yield return str.Trim ();
-			}
-		}
-	}
+    private static IEnumerable<string> ConvertToList(string spacedListString)
+    {
+        var strings = spacedListString.Split();
+        foreach (var str in strings)
+        {
+            yield return str.Trim();
+        }
+    }
 }
