@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using OnvifDiscovery.Common;
@@ -8,7 +9,8 @@ namespace OnvifDiscovery.Udp;
 /// <summary>
 ///     A simple Udp client that wraps <see cref="System.Net.Sockets.UdpClient" />
 /// </summary>
-internal class UdpClientWrapper : IUdpClient
+[ExcludeFromCodeCoverage]
+internal sealed class UdpClientWrapper : IUdpClient
 {
     private readonly UdpClient client;
     private bool disposedValue;
@@ -67,7 +69,7 @@ internal class UdpClientWrapper : IUdpClient
         return await client.SendAsync(datagram, datagram.Length, endPoint);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
