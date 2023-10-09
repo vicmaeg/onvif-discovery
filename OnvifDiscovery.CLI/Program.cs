@@ -1,5 +1,4 @@
 ﻿using OnvifDiscovery;
-using OnvifDiscovery.Models;
 
 Console.WriteLine("Starting Discover ONVIF cameras for 10 seconds, press Ctrl+C to abort\n");
 
@@ -9,15 +8,11 @@ Console.CancelKeyPress += (s, e) =>
     e.Cancel = true;
     cts.Cancel();
 };
-var discovery = new Discovery();
-await discovery.Discover(10, onNewDevice, cts.Token);
-Console.WriteLine("ONVIF Discovery finished");
 
-void onNewDevice(DiscoveryDevice device)
+try
 {
-    // Multiple events could be received at the same time.
-    // The lock is here to avoid messing the console.
-    lock (Console.Out)
+    var discovery = new Discovery();
+    await foreach (var device in discovery.DiscoverAsync(10, cts.Token))
     {
         Console.WriteLine(
             $"Device model {device.Model} from manufacturer {device.Mfr} has address {device.Address}");
@@ -29,4 +24,9 @@ void onNewDevice(DiscoveryDevice device)
 
         Console.WriteLine("\n");
     }
+
+    Console.WriteLine("ONVIF Discovery finished");
+} catch (OperationCanceledException)
+{
+    Console.WriteLine("ONVIF Discovery canceled");
 }
