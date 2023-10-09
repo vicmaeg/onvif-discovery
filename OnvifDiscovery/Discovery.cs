@@ -1,14 +1,10 @@
 using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-using OnvifDiscovery.Client;
+using System.Threading.Channels;
 using OnvifDiscovery.Common;
 using OnvifDiscovery.Exceptions;
-using OnvifDiscovery.Interfaces;
 using OnvifDiscovery.Models;
+using OnvifDiscovery.Udp;
 
 namespace OnvifDiscovery;
 
@@ -35,6 +31,30 @@ public class Discovery : IDiscovery
     }
 
     /// <summary>
+    ///     Discover new onvif cameras by returning an async enumerable
+    /// </summary>
+    /// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns></returns>
+    public IAsyncEnumerable<DiscoveryDevice> DiscoverAsync(int timeout, CancellationToken cancellationToken = default)
+    {
+        var channel = Channel.CreateUnbounded<DiscoveryDevice>();
+        _ = DiscoverFromAllInterfaces(channel.Writer, timeout, cancellationToken);
+        return channel.Reader.ReadAllAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     Discover new onvif cameras by passing a channel writer and a timeout
+    /// </summary>
+    /// <param name="channelWriter">Channel Writer that this method will use to write new discovered cameras</param>
+    /// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
+    /// <param name="cancellationToken">A cancellation token</param>
+    /// <returns></returns>
+    public Task DiscoverAsync(ChannelWriter<DiscoveryDevice> channelWriter, int timeout,
+        CancellationToken cancellationToken = default) =>
+        DiscoverFromAllInterfaces(channelWriter, timeout, cancellationToken);
+
+    /// <summary>
     ///     Discover new onvif devices on the network passing a callback
     ///     to retrieve devices as they reply
     /// </summary>
@@ -42,30 +62,14 @@ public class Discovery : IDiscovery
     /// <param name="onDeviceDiscovered">A method that is called each time a new device replies.</param>
     /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>The Task to be awaited</returns>
+    [Obsolete("Use one of the DiscoverAsync methods, this method will be removed in next major release")]
     public async Task Discover(int timeout, Action<DiscoveryDevice> onDeviceDiscovered,
         CancellationToken cancellationToken = default)
     {
-        var clients = clientFactory.CreateClientForeachInterface();
-
-        if (!clients.Any())
+        await foreach (var discoveredDevice in DiscoverAsync(timeout, cancellationToken))
         {
-            throw new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
+            onDeviceDiscovered(discoveredDevice);
         }
-
-        var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
-
-        void deviceDiscovered(DiscoveryDevice discoveryDevice)
-        {
-            if (discoveredDevicesIPs.TryAdd(discoveryDevice.Address, true))
-            {
-                onDeviceDiscovered(discoveryDevice);
-            }
-        }
-
-        var discoveries = clients.Select(client => Discover(timeout, client, deviceDiscovered, cancellationToken))
-            .ToArray();
-
-        await Task.WhenAll(discoveries);
     }
 
     /// <summary>
@@ -78,59 +82,103 @@ public class Discovery : IDiscovery
     ///     Use the <see cref="Discover(int, Action{DiscoveryDevice}, CancellationToken)" />
     ///     overload (with an action as a parameter) if you want to retrieve devices as they reply.
     /// </remarks>
+    [Obsolete("Use one of the DiscoverAsync methods, this method will be removed in next major release")]
     public async Task<IEnumerable<DiscoveryDevice>> Discover(int timeout,
         CancellationToken cancellationToken = default)
     {
         var devices = new List<DiscoveryDevice>();
-        await Discover(timeout, d => devices.Add(d), cancellationToken);
+        await foreach (var discoveredDevice in DiscoverAsync(timeout, cancellationToken))
+        {
+            devices.Add(discoveredDevice);
+        }
 
         return devices;
     }
 
-    private static async Task Discover(int timeout, IOnvifUdpClient client,
-        Action<DiscoveryDevice> onDeviceDiscovered,
+    private async Task DiscoverFromAllInterfaces(ChannelWriter<DiscoveryDevice> channelWriter, int timeout,
         CancellationToken cancellationToken = default)
     {
-        var messageId = Guid.NewGuid();
-        var responses = new List<UdpReceiveResult>();
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
-
         try
         {
-            await SendProbe(client, messageId);
-            while (true)
+            var clients = clientFactory.CreateClientForeachInterface().ToArray();
+            if (!clients.Any())
             {
-                if (cts.IsCancellationRequested || cancellationToken.IsCancellationRequested)
+                throw new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
+            }
+
+            var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+            try
+            {
+                var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
+                var discoveries = clients.Select(client =>
+                    DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
+                await Task.WhenAll(discoveries);
+            } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException &&
+                                         timeoutCts.IsCancellationRequested)
+            {
+                // If cancellation is from timeout source then just catch it
+            }
+        } catch (Exception ex)
+        {
+            channelWriter.TryComplete(ex);
+            throw;
+        } finally
+        {
+            channelWriter.TryComplete();
+        }
+
+        // var clients = clientFactory.CreateClientForeachInterface().ToArray();
+        // var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+        // var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        //
+        // if (!clients.Any())
+        // {
+        //     var exception = new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
+        //     channelWriter.TryComplete(exception);
+        //     throw exception;
+        // }
+        //
+        // try
+        // {
+        //     var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
+        //     var discoveries = clients.Select(client =>
+        //         DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
+        //     await Task.WhenAll(discoveries);
+        // } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
+        // {
+        //     if (timeoutCts.IsCancellationRequested)
+        //     {
+        //         return;
+        //     }
+        //
+        //
+        //     throw;
+        // } finally
+        // {
+        //     channelWriter.TryComplete();
+        // }
+    }
+
+    private static async Task DiscoverFromSingleInterface(ChannelWriter<DiscoveryDevice> channelWriter,
+        IUdpClient client, ConcurrentDictionary<string, bool> discoveredDevicesIps,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var messageId = Guid.NewGuid();
+            await SendProbeMessage(client, messageId);
+            await foreach (var response in client.ReceiveResultsAsync(cancellationToken))
+            {
+                var discoveredDevice = ProbeMessageProcessor.ProcessResponse(response, messageId);
+                if (discoveredDevice is null)
                 {
-                    break;
+                    continue;
                 }
 
-                try
+                if (discoveredDevicesIps.TryAdd(discoveredDevice.Address, true))
                 {
-                    var response = await client.ReceiveAsync()
-                        .WithCancellation(cancellationToken)
-                        .WithCancellation(cts.Token);
-
-                    if (IsAlreadyDiscovered(response, responses))
-                    {
-                        continue;
-                    }
-
-                    responses.Add(response);
-                    var discoveredDevice = ProcessResponse(response, messageId);
-                    if (discoveredDevice != null)
-                    {
-#pragma warning disable 4014 // Just trigger the callback and forget about it. This is expected to avoid locking the loop
-                        Task.Run(() => onDeviceDiscovered(discoveredDevice), CancellationToken.None);
-#pragma warning restore 4014
-                    }
-                } catch (OperationCanceledException)
-                {
-                    // Either the user canceled the action or the timeout has fired
-                } catch (Exception)
-                {
-                    // we catch all exceptions !
-                    // Something might be bad in the response of a camera when call ReceiveAsync (BeginReceive in socket) fail
+                    await channelWriter.WriteAsync(discoveredDevice, cancellationToken);
                 }
             }
         } finally
@@ -139,42 +187,11 @@ public class Discovery : IDiscovery
         }
     }
 
-    private static async Task SendProbe(IOnvifUdpClient client, Guid messageId)
+    private static async Task SendProbeMessage(IUdpClient client, Guid messageId)
     {
         var multicastEndpoint =
             new IPEndPoint(IPAddress.Parse(Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
-        await client.SendProbeAsync(messageId, multicastEndpoint);
+        var datagram = WSProbeMessageBuilder.NewProbeMessage(messageId);
+        await client.SendAsync(datagram, multicastEndpoint);
     }
-
-    private static DiscoveryDevice? ProcessResponse(UdpReceiveResult response, Guid messageId)
-    {
-        var strResponse = Encoding.UTF8.GetString(response.Buffer);
-        var xmlResponse = DeserializeResponse(strResponse);
-        if (IsFromProbeMessage(messageId, xmlResponse)
-            && xmlResponse!.Body.ProbeMatches.Any()
-            && !string.IsNullOrEmpty(xmlResponse.Body.ProbeMatches[0].Scopes))
-        {
-            return DeviceFactory.CreateDevice(xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
-        }
-
-        return null;
-    }
-
-    private static XmlProbeResponse? DeserializeResponse(string xml)
-    {
-        var serializer = new XmlSerializer(typeof(XmlProbeResponse));
-        var settings = new XmlReaderSettings();
-        using var textReader = new StringReader(xml);
-        using var xmlReader = XmlReader.Create(textReader, settings);
-        return serializer.Deserialize(xmlReader) as XmlProbeResponse;
-    }
-
-    private static bool IsAlreadyDiscovered(UdpReceiveResult device, List<UdpReceiveResult> devices)
-    {
-        var deviceEndpointString = device.RemoteEndPoint.ToString();
-        return devices.Exists(d => d.RemoteEndPoint.ToString().Equals(deviceEndpointString));
-    }
-
-    private static bool IsFromProbeMessage(Guid messageId, XmlProbeResponse? response) =>
-        response?.Header.RelatesTo.Contains(messageId.ToString()) ?? false;
 }
