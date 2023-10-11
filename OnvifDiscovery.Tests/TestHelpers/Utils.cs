@@ -8,7 +8,7 @@ public static class Utils
     {
         var templateResponse = File.ReadAllText("Resources/response.txt");
         var modifiedResponse = string.Format(templateResponse, camera.MessageId, camera.Address,
-            camera.Model, camera.Manufacturer, camera.IP);
+            camera.Model, camera.Manufacturer, camera.XAddressIp);
 
         return Encoding.ASCII.GetBytes(modifiedResponse);
     }
