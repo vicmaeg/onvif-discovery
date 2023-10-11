@@ -108,9 +108,9 @@ public class Discovery : IDiscovery
                 throw new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
             }
 
-            var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
+            var discoveredDevicesAddresses = new ConcurrentDictionary<string, bool>();
             var discoveries = clients.Select(client =>
-                DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
+                DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesAddresses, cts.Token));
             await Task.WhenAll(discoveries);
         } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException &&
                                      timeoutCts.IsCancellationRequested)
@@ -127,7 +127,7 @@ public class Discovery : IDiscovery
     }
 
     private static async Task DiscoverFromSingleInterface(ChannelWriter<DiscoveryDevice> channelWriter,
-        IUdpClient client, ConcurrentDictionary<string, bool> discoveredDevicesIps,
+        IUdpClient client, ConcurrentDictionary<string, bool> discoveredDevicesAddresses,
         CancellationToken cancellationToken = default)
     {
         try
@@ -137,15 +137,17 @@ public class Discovery : IDiscovery
             await foreach (var response in client.ReceiveResultsAsync(cancellationToken))
             {
                 var discoveredDevice = ProbeMessageProcessor.ProcessResponse(response, messageId);
-                if (discoveredDevice is null)
+                if (discoveredDevice is null || discoveredDevice.XAddresses.All(discoveredDevicesAddresses.ContainsKey))
                 {
                     continue;
                 }
 
-                if (discoveredDevicesIps.TryAdd(discoveredDevice.Address, true))
+                foreach (var xAddress in discoveredDevice.XAddresses)
                 {
-                    await channelWriter.WriteAsync(discoveredDevice, cancellationToken);
+                    discoveredDevicesAddresses.TryAdd(xAddress, true);
                 }
+
+                await channelWriter.WriteAsync(discoveredDevice, cancellationToken);
             }
         } finally
         {

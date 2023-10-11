@@ -1,23 +1,6 @@
 ﻿namespace OnvifDiscovery.Tests.TestHelpers;
 
-public class TestCamera
+public record TestCamera(Guid MessageId, Guid Address, string Model, string Manufacturer, string IP, int? Port = null)
 {
-    public TestCamera(Guid messageId, Guid address, string model, string manufacturer, string ip)
-    {
-        MessageId = messageId;
-        Address = address;
-        Model = model;
-        Manufacturer = manufacturer;
-        IP = ip;
-    }
-
-    public Guid MessageId { get; set; }
-
-    public Guid Address { get; }
-
-    public string Model { get; }
-
-    public string Manufacturer { get; }
-
-    public string IP { get; }
+    public string XAddressIp => Port is null ? $"{IP}" : $"{IP}:{Port}";
 }

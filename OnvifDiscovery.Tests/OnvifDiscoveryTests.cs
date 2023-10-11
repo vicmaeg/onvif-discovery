@@ -187,18 +187,24 @@ public class OnvifDiscoveryTests
     public async Task DiscoverAsync_DuplicatedResultsFromMultipleInterfaces_ResultDoesNotHaveDuplications()
     {
         // Arrange
-        var cameraA = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12");
-        var cameraB = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12");
+        var cameraA = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12", 1000);
+        var cameraB = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12", 1000);
         var udpClientAMock = new Mock<IUdpClient>();
         var udpClientBMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClientAMock.Object, udpClientBMock.Object });
         udpClientAMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { cameraA.MessageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            {
+                cameraA = cameraA with { MessageId = ParseMessageId(datagram) };
+            });
         udpClientBMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { cameraB.MessageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            {
+                cameraB = cameraB with { MessageId = ParseMessageId(datagram) };
+            });
         udpClientAMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -217,6 +223,48 @@ public class OnvifDiscoveryTests
 
         // Arrange
         discoveredDevices.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task DiscoverAsync_ResultsFromMultipleInterfacesAndSameIpButDifferentPortForXAddress_ResultDoesNotHaveDuplications()
+    {
+        // Arrange
+        var cameraA = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12", 1000);
+        var cameraB = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12", 1001);
+        var udpClientAMock = new Mock<IUdpClient>();
+        var udpClientBMock = new Mock<IUdpClient>();
+        udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
+            { udpClientAMock.Object, udpClientBMock.Object });
+        udpClientAMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .ReturnsAsync(200)
+            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            {
+                cameraA = cameraA with { MessageId = ParseMessageId(datagram) };
+            });
+        udpClientBMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .ReturnsAsync(200)
+            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            {
+                cameraB = cameraB with { MessageId = ParseMessageId(datagram) };
+            });
+        udpClientAMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                return new UdpReceiveResult[] { new(Utils.CreateProbeResponse(cameraA), IPEndPoint.Parse(cameraA.IP)) }
+                    .ToAsyncEnumerable();
+            });
+        udpClientBMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                return new UdpReceiveResult[] { new(Utils.CreateProbeResponse(cameraB), IPEndPoint.Parse(cameraB.IP)) }
+                    .ToAsyncEnumerable();
+            });
+
+        // Act
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+
+        // Arrange
+        discoveredDevices.Should().HaveCount(2);
     }
 
     [Fact]
