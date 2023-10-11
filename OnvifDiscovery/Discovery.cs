@@ -98,6 +98,8 @@ public class Discovery : IDiscovery
     private async Task DiscoverFromAllInterfaces(ChannelWriter<DiscoveryDevice> channelWriter, int timeout,
         CancellationToken cancellationToken = default)
     {
+        var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         try
         {
             var clients = clientFactory.CreateClientForeachInterface().ToArray();
@@ -106,19 +108,14 @@ public class Discovery : IDiscovery
                 throw new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
             }
 
-            var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-            try
-            {
-                var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
-                var discoveries = clients.Select(client =>
-                    DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
-                await Task.WhenAll(discoveries);
-            } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException &&
-                                         timeoutCts.IsCancellationRequested)
-            {
-                // If cancellation is from timeout source then just catch it
-            }
+            var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
+            var discoveries = clients.Select(client =>
+                DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
+            await Task.WhenAll(discoveries);
+        } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException &&
+                                     timeoutCts.IsCancellationRequested)
+        {
+            // If cancellation is from timeout source then just catch it
         } catch (Exception ex)
         {
             channelWriter.TryComplete(ex);
@@ -127,37 +124,6 @@ public class Discovery : IDiscovery
         {
             channelWriter.TryComplete();
         }
-
-        // var clients = clientFactory.CreateClientForeachInterface().ToArray();
-        // var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
-        // var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-        //
-        // if (!clients.Any())
-        // {
-        //     var exception = new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
-        //     channelWriter.TryComplete(exception);
-        //     throw exception;
-        // }
-        //
-        // try
-        // {
-        //     var discoveredDevicesIPs = new ConcurrentDictionary<string, bool>();
-        //     var discoveries = clients.Select(client =>
-        //         DiscoverFromSingleInterface(channelWriter, client, discoveredDevicesIPs, cts.Token));
-        //     await Task.WhenAll(discoveries);
-        // } catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
-        // {
-        //     if (timeoutCts.IsCancellationRequested)
-        //     {
-        //         return;
-        //     }
-        //
-        //
-        //     throw;
-        // } finally
-        // {
-        //     channelWriter.TryComplete();
-        // }
     }
 
     private static async Task DiscoverFromSingleInterface(ChannelWriter<DiscoveryDevice> channelWriter,

@@ -27,7 +27,7 @@ internal sealed class UdpClientWrapper : IUdpClient
         => await client.SendAsync(datagram, datagram.Length, endPoint);
 
     public async IAsyncEnumerable<UdpReceiveResult> ReceiveResultsAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {

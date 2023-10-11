@@ -17,18 +17,20 @@ internal class UdpClientFactory : IUdpClientFactory
                 continue;
             }
 
-            foreach (var ua in adapter.GetIPProperties().UnicastAddresses)
+            foreach (var address in adapter.GetIPProperties().UnicastAddresses.Select(x => x.Address))
             {
-                if (ua.Address.AddressFamily == AddressFamily.InterNetwork)
+                if (address.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    IPEndPoint myLocalEndPoint = new(ua.Address, 0); // port does not matter
-                    try
-                    {
-                        clients.Add(new UdpClientWrapper(myLocalEndPoint));
-                    } catch (SocketException)
-                    {
-                        // Discard clients that produces a SocketException when created
-                    }
+                    continue;
+                }
+
+                IPEndPoint myLocalEndPoint = new(address, 0); // port does not matter
+                try
+                {
+                    clients.Add(new UdpClientWrapper(myLocalEndPoint));
+                } catch (SocketException)
+                {
+                    // Discard clients that produces a SocketException when created
                 }
             }
         }

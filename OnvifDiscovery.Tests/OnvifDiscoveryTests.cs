@@ -541,7 +541,7 @@ public class OnvifDiscoveryTests
         udpClient2Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private async IAsyncEnumerable<UdpReceiveResult> GetTestCamerasEvery200Milliseconds(Guid messageId,
+    private static async IAsyncEnumerable<UdpReceiveResult> GetTestCamerasEvery200Milliseconds(Guid messageId,
         [EnumeratorCancellation] CancellationToken ct)
     {
         var cameraNumber = 1;
@@ -555,7 +555,7 @@ public class OnvifDiscoveryTests
         }
     }
 
-    private Guid ParseMessageId(byte[] datagram)
+    private static Guid ParseMessageId(byte[] datagram)
     {
         var message = Encoding.UTF8.GetString(datagram);
         var uuidIndex = message.IndexOf("uuid:", StringComparison.Ordinal);
