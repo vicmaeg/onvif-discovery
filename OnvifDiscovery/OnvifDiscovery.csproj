@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
-    <AssemblyCopyright>© Víctor Martos 2019</AssemblyCopyright>
+    <AssemblyCopyright>© Víctor Martos 2023</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
     <Version>2.0.0</Version>
     <PackageReleaseNotes>Update target framework to .net6.0 and new DiscoverAsync methods</PackageReleaseNotes>
@@ -18,9 +18,9 @@
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
     <IsPackable>true</IsPackable>
     <PackageTags>onvif;discover;camera</PackageTags>
-    <PackageProjectUrl>https://github.com/vmartos/onvif-discovery</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/vicmaeg/onvif-discovery</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/vmartos/onvif-discovery</RepositoryUrl>
+    <RepositoryUrl>https://github.com/vicmaeg/onvif-discovery</RepositoryUrl>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
 
