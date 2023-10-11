@@ -21,6 +21,11 @@
     <PackageProjectUrl>https://github.com/vmartos/onvif-discovery</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/vmartos/onvif-discovery</RepositoryUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\readme.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
 </Project>
