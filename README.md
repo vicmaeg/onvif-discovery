@@ -5,20 +5,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=vicmaeg_onvif-discovery&metric=coverage)](https://sonarcloud.io/summary/new_code?id=vicmaeg_onvif-discovery)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=vicmaeg_onvif-discovery&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=vicmaeg_onvif-discovery)
 
-OnvifDiscovery is a simple cross-platform library to discover ONVIF compliant devices.
-
-## Where can I use it
-
-OnvifDiscovery targets .NET Standard 2.0, so it can run on platforms:
-
-* .NET core >= 2.0 (Windows, MacOS, linux)
-* .NET Framework >= 4.6.1 (Windows)
-* Mono >= 5.4 (Windows, MacOS, linux)
-* Xamarin.iOS >= 10.14 (iOS)
-* Xamarin.Mac >= 3.8 (MacOS)
-* Xamarin.Android >= 8.0 (Android)
-
-More info: [click here](https://docs.microsoft.com/es-es/dotnet/standard/net-standard)
+OnvifDiscovery is a simple cross-platform .NET library to discover ONVIF compliant devices.
 
 ## Getting started
 
@@ -33,15 +20,15 @@ using OnvifDiscovery;
 // Create a Discovery instance
 var onvifDiscovery = new Discovery ();
 
-// Call the asynchronous method Discover with a timeout of 1 second
-var onvifDevices = await onvifDiscovery.Discover (1);
-
-// Alternatively, you can call Discover with a cancellation token
-CancellationTokenSource cancellation = new CancellationTokenSource ();
-var onvifDevices = await onvifDiscovery.Discover (1, cancellation.Token);
+// Call the asynchronous method DiscoverAsync that returns IAsyncEnumerable
+// with a timeout of 1 second
+await foreach (var device in discovery.DiscoverAsync(1, cancellationToken))
+{
+    // New device discovered
+}
 ```
 
-Finally, you can also use the Discover method passing a callback, so you will receive calls to that method every time a new camera is discovered, take into account that this callback can be called at the same time from different threads, so make sure your callback is thread-safe:
+Finally, you can also use the DiscoverAsync method by passing a `ChannelWriter<DiscoveryDevice>`, the method will write to the channel devices as soon as they are discovered:
 
 ```cs
 // add the using
@@ -50,12 +37,17 @@ using OnvifDiscovery;
 // Create a Discovery instance
 var onvifDiscovery = new Discovery ();
 
-// You can call Discover with a callback (Action) and CancellationToken
+// You can call Discover with a ChannelWriter and CancellationToken
 CancellationTokenSource cancellation = new CancellationTokenSource ();
-await onvifDiscovery.Discover (1, OnNewDevice, cancellation.Token);
+var channel = Channel.CreateUnbounded<DiscoveryDevice>();
 
-private void OnNewDevice (DiscoveryDevice device)
+var discoverTask = onvifDiscovery.DiscoverAsync(channel.Writer, 1, cancellationToken);
+await foreach (var device in channel.Reader.ReadAllAsync(cancellationToken))
 {
     // New device discovered
 }
 ```
+
+## Obsolete methods from version 1.X
+When you update to version 2 you can see that previous available methods are marked as obsolete.
+Please use the new methods explained above as they have better support for asynchronous programming.
