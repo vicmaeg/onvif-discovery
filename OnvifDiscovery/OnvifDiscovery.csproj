@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <ProjectGuid>{518CF8E2-FB61-4B48-94ED-FA3C5E2470B3}</ProjectGuid>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -12,8 +12,8 @@
     <AssemblyTitle>Onvif Discovery</AssemblyTitle>
     <AssemblyCopyright>© Víctor Martos 2023</AssemblyCopyright>
     <PackageId>OnvifDiscovery</PackageId>
-    <Version>2.0.0</Version>
-    <PackageReleaseNotes>Update target framework to .net6.0 and new DiscoverAsync methods</PackageReleaseNotes>
+    <Version>2.1.0</Version>
+    <PackageReleaseNotes>add new target framework net8.0</PackageReleaseNotes>
     <Authors>Víctor Martos</Authors>
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
     <IsPackable>true</IsPackable>
