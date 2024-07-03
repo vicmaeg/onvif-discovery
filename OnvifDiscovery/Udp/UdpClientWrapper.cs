@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using OnvifDiscovery.Common;
 
 namespace OnvifDiscovery.Udp;
 
@@ -23,7 +22,7 @@ internal sealed class UdpClientWrapper : IUdpClient
         };
     }
 
-    public async Task<int> SendAsync(byte[] datagram, IPEndPoint endPoint)
+    public async Task<int> SendAsync(byte[] datagram, IPEndPoint endPoint, CancellationToken cancellationToken)
         => await client.SendAsync(datagram, datagram.Length, endPoint);
 
     public async IAsyncEnumerable<UdpReceiveResult> ReceiveResultsAsync(
@@ -61,12 +60,6 @@ internal sealed class UdpClientWrapper : IUdpClient
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(true);
         GC.SuppressFinalize(this);
-    }
-
-    public async Task<int> SendProbeAsync(Guid messageId, IPEndPoint endPoint)
-    {
-        var datagram = WSProbeMessageBuilder.NewProbeMessage(messageId);
-        return await client.SendAsync(datagram, datagram.Length, endPoint);
     }
 
     private void Dispose(bool disposing)

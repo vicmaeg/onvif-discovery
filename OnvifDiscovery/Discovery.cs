@@ -96,10 +96,10 @@ public class Discovery : IDiscovery
     }
 
     private async Task DiscoverFromAllInterfaces(ChannelWriter<DiscoveryDevice> channelWriter, int timeout,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
-        var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         try
         {
             var clients = clientFactory.CreateClientForeachInterface().ToArray();
@@ -128,38 +128,52 @@ public class Discovery : IDiscovery
 
     private static async Task DiscoverFromSingleInterface(ChannelWriter<DiscoveryDevice> channelWriter,
         IUdpClient client, ConcurrentDictionary<string, bool> discoveredDevicesAddresses,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         try
         {
             var messageId = Guid.NewGuid();
-            await SendProbeMessage(client, messageId);
-            await foreach (var response in client.ReceiveResultsAsync(cancellationToken))
-            {
-                var discoveredDevice = ProbeMessageProcessor.ProcessResponse(response, messageId);
-                if (discoveredDevice is null || discoveredDevice.XAddresses.All(discoveredDevicesAddresses.ContainsKey))
-                {
-                    continue;
-                }
-
-                foreach (var xAddress in discoveredDevice.XAddresses)
-                {
-                    discoveredDevicesAddresses.TryAdd(xAddress, true);
-                }
-
-                await channelWriter.WriteAsync(discoveredDevice, cancellationToken);
-            }
+            var probeTask = SendProbeMessages(client, messageId, cancellationToken);
+            var discoverMessagesTask =
+                ReceiveDiscoverMessages(channelWriter, client, discoveredDevicesAddresses, messageId,
+                    cancellationToken);
+            await Task.WhenAll(probeTask, discoverMessagesTask);
         } finally
         {
             client.Close();
         }
     }
 
-    private static async Task SendProbeMessage(IUdpClient client, Guid messageId)
+    private static async Task SendProbeMessages(IUdpClient client, Guid messageId, CancellationToken cancellationToken)
     {
         var multicastEndpoint =
             new IPEndPoint(IPAddress.Parse(Constants.WS_MULTICAST_ADDRESS), Constants.WS_MULTICAST_PORT);
         var datagram = WSProbeMessageBuilder.NewProbeMessage(messageId);
-        await client.SendAsync(datagram, multicastEndpoint);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await client.SendAsync(datagram, multicastEndpoint, cancellationToken);
+            await Task.Delay(500, cancellationToken);
+        }
+    }
+
+    private static async Task ReceiveDiscoverMessages(ChannelWriter<DiscoveryDevice> channelWriter,
+        IUdpClient client, ConcurrentDictionary<string, bool> discoveredDevicesAddresses, Guid messageId,
+        CancellationToken cancellationToken)
+    {
+        await foreach (var response in client.ReceiveResultsAsync(cancellationToken))
+        {
+            var discoveredDevice = ProbeMessageProcessor.ProcessResponse(response, messageId);
+            if (discoveredDevice is null || discoveredDevice.XAddresses.All(discoveredDevicesAddresses.ContainsKey))
+            {
+                continue;
+            }
+
+            foreach (var xAddress in discoveredDevice.XAddresses)
+            {
+                discoveredDevicesAddresses.TryAdd(xAddress, true);
+            }
+
+            await channelWriter.WriteAsync(discoveredDevice, cancellationToken);
+        }
     }
 }
