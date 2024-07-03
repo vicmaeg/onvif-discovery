@@ -48,9 +48,13 @@ public class OnvifDiscoveryTests
         var udpClientMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IUdpClient> { udpClientMock.Object });
-        udpClientMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId = ParseMessageId(datagram);
+            });
         udpClientMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -79,7 +83,9 @@ public class OnvifDiscoveryTests
         secondDevice.Mfr.Should().Be(camera2.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClientMock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClientMock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClientMock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -97,12 +103,20 @@ public class OnvifDiscoveryTests
         var udpClient2Mock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClient1Mock.Object, udpClient2Mock.Object });
-        udpClient1Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClient1Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId1 = ParseMessageId(datagram); });
-        udpClient2Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId1 = ParseMessageId(datagram);
+            });
+        udpClient2Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId2 = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId2 = ParseMessageId(datagram);
+            });
         udpClient1Mock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -152,8 +166,12 @@ public class OnvifDiscoveryTests
         fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClient1Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
-        udpClient2Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClient1Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+        udpClient2Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClient1Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
         udpClient2Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -166,9 +184,13 @@ public class OnvifDiscoveryTests
         var udpClientMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IUdpClient> { udpClientMock.Object });
-        udpClientMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId = ParseMessageId(datagram);
+            });
         udpClientMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => GetTestCamerasEvery200Milliseconds(messageId, ct));
 
@@ -193,15 +215,17 @@ public class OnvifDiscoveryTests
         var udpClientBMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClientAMock.Object, udpClientBMock.Object });
-        udpClientAMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientAMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
             {
                 cameraA = cameraA with { MessageId = ParseMessageId(datagram) };
             });
-        udpClientBMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientBMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
             {
                 cameraB = cameraB with { MessageId = ParseMessageId(datagram) };
             });
@@ -226,7 +250,8 @@ public class OnvifDiscoveryTests
     }
 
     [Fact]
-    public async Task DiscoverAsync_ResultsFromMultipleInterfacesAndSameIpButDifferentPortForXAddress_ResultDoesNotHaveDuplications()
+    public async Task
+        DiscoverAsync_ResultsFromMultipleInterfacesAndSameIpButDifferentPortForXAddress_ResultDoesNotHaveDuplications()
     {
         // Arrange
         var cameraA = new TestCamera(Guid.NewGuid(), Guid.NewGuid(), "AxisHardware", "AxisName", "192.168.1.12", 1000);
@@ -235,15 +260,19 @@ public class OnvifDiscoveryTests
         var udpClientBMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClientAMock.Object, udpClientBMock.Object });
-        udpClientAMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientAMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
             {
                 cameraA = cameraA with { MessageId = ParseMessageId(datagram) };
             });
-        udpClientBMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientBMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(),
+                    It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) =>
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
             {
                 cameraB = cameraB with { MessageId = ParseMessageId(datagram) };
             });
@@ -276,9 +305,13 @@ public class OnvifDiscoveryTests
         var udpClientMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IUdpClient> { udpClientMock.Object });
-        udpClientMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId = ParseMessageId(datagram);
+            });
         udpClientMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -303,7 +336,9 @@ public class OnvifDiscoveryTests
         firstDevice.Mfr.Should().Be(camera.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClientMock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClientMock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClientMock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -315,9 +350,13 @@ public class OnvifDiscoveryTests
         var udpClientMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IUdpClient> { udpClientMock.Object });
-        udpClientMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId = ParseMessageId(datagram);
+            });
         udpClientMock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => GetTestCamerasEvery200Milliseconds(messageId, ct));
 
@@ -349,7 +388,8 @@ public class OnvifDiscoveryTests
         var udpClientMock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface())
             .Returns(new List<IUdpClient> { udpClientMock.Object });
-        udpClientMock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClientMock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception(exceptionMessage));
 
         // Act
@@ -374,12 +414,20 @@ public class OnvifDiscoveryTests
         var udpClient2Mock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClient1Mock.Object, udpClient2Mock.Object });
-        udpClient1Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClient1Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId1 = ParseMessageId(datagram); });
-        udpClient2Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId1 = ParseMessageId(datagram);
+            });
+        udpClient2Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId2 = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId2 = ParseMessageId(datagram);
+            });
         udpClient1Mock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -431,8 +479,12 @@ public class OnvifDiscoveryTests
         fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClient1Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
-        udpClient2Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClient1Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+        udpClient2Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClient1Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
         udpClient2Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -452,12 +504,20 @@ public class OnvifDiscoveryTests
         var udpClient2Mock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClient1Mock.Object, udpClient2Mock.Object });
-        udpClient1Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClient1Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId1 = ParseMessageId(datagram); });
-        udpClient2Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId1 = ParseMessageId(datagram);
+            });
+        udpClient2Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId2 = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId2 = ParseMessageId(datagram);
+            });
         udpClient1Mock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -507,8 +567,12 @@ public class OnvifDiscoveryTests
         fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClient1Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
-        udpClient2Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClient1Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+        udpClient2Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClient1Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
         udpClient2Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -528,12 +592,20 @@ public class OnvifDiscoveryTests
         var udpClient2Mock = new Mock<IUdpClient>();
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<IUdpClient>
             { udpClient1Mock.Object, udpClient2Mock.Object });
-        udpClient1Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+        udpClient1Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId1 = ParseMessageId(datagram); });
-        udpClient2Mock.Setup(cl => cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()))
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId1 = ParseMessageId(datagram);
+            });
+        udpClient2Mock.Setup(cl =>
+                cl.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(200)
-            .Callback<byte[], IPEndPoint>((datagram, _) => { messageId2 = ParseMessageId(datagram); });
+            .Callback<byte[], IPEndPoint, CancellationToken>((datagram, _, _) =>
+            {
+                messageId2 = ParseMessageId(datagram);
+            });
         udpClient1Mock.Setup(udp => udp.ReceiveResultsAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
@@ -583,8 +655,12 @@ public class OnvifDiscoveryTests
         fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
-        udpClient1Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
-        udpClient2Mock.Verify(c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>()), Times.Once);
+        udpClient1Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+        udpClient2Mock.Verify(
+            c => c.SendAsync(It.IsAny<byte[]>(), It.IsAny<IPEndPoint>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
         udpClient1Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
         udpClient2Mock.Verify(c => c.ReceiveResultsAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

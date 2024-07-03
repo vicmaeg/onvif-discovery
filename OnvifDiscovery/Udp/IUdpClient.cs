@@ -17,7 +17,7 @@ public interface IUdpClient : IDisposable
     /// </param>
     /// <param name="endPoint">An System.Net.IPEndPoint that represents the host and port to which to send the datagram.</param>
     /// <returns>The Task</returns>
-    Task<int> SendAsync(byte[] datagram, IPEndPoint endPoint);
+    Task<int> SendAsync(byte[] datagram, IPEndPoint endPoint, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Continuously receives udp results using async enumerable feature until the token is cancelled
