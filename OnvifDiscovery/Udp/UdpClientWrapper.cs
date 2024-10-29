@@ -34,7 +34,16 @@ internal sealed class UdpClientWrapper : IUdpClient
             try
             {
 #if NET48
-                response = await client.ReceiveAsync();
+                var receiveTask = client.ReceiveAsync();
+                var tcs = new TaskCompletionSource<int>();
+                using (cancellationToken.Register(s => ((TaskCompletionSource<int>)s!).TrySetResult(0), tcs))
+                {
+                    if (receiveTask != await Task.WhenAny(receiveTask, tcs.Task))
+                    {
+                        throw new OperationCanceledException(cancellationToken);
+                    }
+                }
+                response = await receiveTask;
 #else
                 response = await client.ReceiveAsync(cancellationToken);
 #endif
