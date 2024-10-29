@@ -33,7 +33,11 @@ internal sealed class UdpClientWrapper : IUdpClient
             UdpReceiveResult? response = null;
             try
             {
+#if NET48
+                response = await client.ReceiveAsync();
+#else
                 response = await client.ReceiveAsync(cancellationToken);
+#endif
             } catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
             {
                 throw;
