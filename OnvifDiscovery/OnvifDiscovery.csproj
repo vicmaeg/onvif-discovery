@@ -15,8 +15,7 @@
     <PackageId>OnvifDiscovery</PackageId>
     <Version>2.1.0</Version>
     <PackageReleaseNotes>
-        * Improve discovery by sending multiple probe messages and receiving them at the same time.
-        * Add new target framework net8.0
+        * Add new target framework .NET 4.8
     </PackageReleaseNotes>
     <Authors>Víctor Martos</Authors>
     <Description>A simple cross-platform library to discover ONVIF compliant devices</Description>
