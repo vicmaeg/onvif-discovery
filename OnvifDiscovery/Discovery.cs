@@ -1,10 +1,10 @@
-using System.Collections.Concurrent;
-using System.Net;
-using System.Threading.Channels;
 using OnvifDiscovery.Common;
 using OnvifDiscovery.Exceptions;
 using OnvifDiscovery.Models;
 using OnvifDiscovery.Udp;
+using System.Collections.Concurrent;
+using System.Net;
+using System.Threading.Channels;
 
 namespace OnvifDiscovery;
 
@@ -40,7 +40,22 @@ public class Discovery : IDiscovery
     {
         var channel = Channel.CreateUnbounded<DiscoveryDevice>();
         _ = DiscoverFromAllInterfaces(channel.Writer, timeout, cancellationToken);
+
+#if NET48
+        static async IAsyncEnumerable<DiscoveryDevice> ReadAllAsync(ChannelReader<DiscoveryDevice> reader, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            while (await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                while (reader.TryRead(out var item))
+                {
+                    yield return item;
+                }
+            }
+        }
+        return ReadAllAsync(channel.Reader, cancellationToken);
+#else
         return channel.Reader.ReadAllAsync(cancellationToken);
+#endif
     }
 
     /// <summary>
