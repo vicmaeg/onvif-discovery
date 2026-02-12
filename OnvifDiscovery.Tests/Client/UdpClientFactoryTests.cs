@@ -1,5 +1,5 @@
-using FluentAssertions;
 using OnvifDiscovery.Udp;
+using Shouldly;
 using Xunit;
 
 namespace OnvifDiscovery.Tests.Client;
@@ -16,7 +16,7 @@ public class UdpClientFactoryTests
         var clients = factory.CreateClientForeachInterface().ToArray();
 
         // Assert
-        clients.Should().HaveCountGreaterThanOrEqualTo(1);
-        clients.Should().AllBeOfType<UdpClientWrapper>();
+        clients.Length.ShouldBeGreaterThanOrEqualTo(1);
+        clients.ShouldAllBe(c => c is UdpClientWrapper);
     }
 }
