@@ -18,11 +18,13 @@ public class OnvifDiscoveryTests
 {
     private readonly Mock<IUdpClientFactory> udpClientFactoryMock;
     private readonly Discovery wSDiscovery;
+    private readonly CancellationToken cancellationToken;
 
     public OnvifDiscoveryTests()
     {
         udpClientFactoryMock = new Mock<IUdpClientFactory>();
         wSDiscovery = new Discovery(udpClientFactoryMock.Object);
+        cancellationToken = TestContext.Current.CancellationToken;
     }
 
     [Fact]
@@ -32,7 +34,7 @@ public class OnvifDiscoveryTests
         udpClientFactoryMock.Setup(cf => cf.CreateClientForeachInterface()).Returns(new List<UdpClientWrapper>());
 
         // Act
-        var act = async () => await wSDiscovery.DiscoverAsync(5).ToListAsync();
+        var act = async () => await wSDiscovery.DiscoverAsync(5).ToListAsync(cancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<DiscoveryException>();
@@ -68,7 +70,7 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
@@ -143,7 +145,7 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
@@ -199,7 +201,7 @@ public class OnvifDiscoveryTests
             new CancellationTokenSource(
                 600); // Cancel after 600ms. Since cameras are received every 500ms, we will receive only one
 
-        var act = async () => await wSDiscovery.DiscoverAsync(5, cancellation.Token).ToListAsync();
+        var act = async () => await wSDiscovery.DiscoverAsync(5, cancellation.Token).ToListAsync(cancellation.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -243,7 +245,7 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Arrange
         discoveredDevices.Should().HaveCount(1);
@@ -290,7 +292,7 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Arrange
         discoveredDevices.Should().HaveCount(2);
@@ -325,7 +327,7 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var discoveredDevices = await wSDiscovery.DiscoverAsync(1).ToListAsync();
+        var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
@@ -364,7 +366,7 @@ public class OnvifDiscoveryTests
         var stopWatch = new Stopwatch();
         stopWatch.Start();
         var numCamerasDiscovered = 0;
-        await foreach (var device in wSDiscovery.DiscoverAsync(1))
+        await foreach (var device in wSDiscovery.DiscoverAsync(1, cancellationToken))
         {
             numCamerasDiscovered++;
             stopWatch.ElapsedMilliseconds.Should()
@@ -393,7 +395,7 @@ public class OnvifDiscoveryTests
             .ThrowsAsync(new Exception(exceptionMessage));
 
         // Act
-        var act = async () => await wSDiscovery.DiscoverAsync(5).ToListAsync();
+        var act = async () => await wSDiscovery.DiscoverAsync(5, cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
@@ -454,8 +456,8 @@ public class OnvifDiscoveryTests
             });
 
         // Act
-        var task = wSDiscovery.DiscoverAsync(channel.Writer, 1);
-        var discoveredDevices = await channel.Reader.ReadAllAsync().ToListAsync();
+        var task = wSDiscovery.DiscoverAsync(channel.Writer, 1, cancellationToken);
+        var discoveredDevices = await channel.Reader.ReadAllAsync(cancellationToken).ToListAsync(cancellationToken);
         await task;
 
         // Assert

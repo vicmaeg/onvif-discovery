@@ -1,9 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Text.Json;
+using Xunit;
 
 namespace OnvifDiscovery.Tests.TestHelpers;
 
-public class ScopesTestDataGenerator : IEnumerable<object[]>
+public class ScopesTestDataGenerator : IEnumerable<ITheoryDataRow>
 {
     private readonly ScopesTestData scopesTestData;
 
@@ -13,11 +14,11 @@ public class ScopesTestDataGenerator : IEnumerable<object[]>
         scopesTestData = JsonSerializer.Deserialize<ScopesTestData>(scopesTestDataText)!;
     }
 
-    public IEnumerator<object[]> GetEnumerator()
+    public IEnumerator<ITheoryDataRow> GetEnumerator()
     {
         foreach (var scopeTestData in scopesTestData.Devices)
         {
-            yield return new object[] { scopeTestData.Scopes, scopeTestData.ExpectedModel, scopeTestData.ExpectedMfr };
+            yield return new TheoryDataRow(scopeTestData.Scopes, scopeTestData.ExpectedModel, scopeTestData.ExpectedMfr);
         }
     }
 
