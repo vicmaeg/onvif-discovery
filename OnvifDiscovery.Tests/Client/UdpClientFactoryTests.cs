@@ -16,7 +16,7 @@ public class UdpClientFactoryTests
         var clients = factory.CreateClientForeachInterface().ToArray();
 
         // Assert
-        clients.Should().HaveCountGreaterOrEqualTo(1);
+        clients.Should().HaveCountGreaterThanOrEqualTo(1);
         clients.Should().AllBeOfType<UdpClientWrapper>();
     }
 }
