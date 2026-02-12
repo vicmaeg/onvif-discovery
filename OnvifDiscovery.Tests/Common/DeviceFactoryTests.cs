@@ -1,8 +1,8 @@
-﻿using System.Net;
-using FluentAssertions;
+using System.Net;
 using OnvifDiscovery.Common;
 using OnvifDiscovery.Models;
 using OnvifDiscovery.Tests.TestHelpers;
+using Shouldly;
 using Xunit;
 
 namespace OnvifDiscovery.Tests.Common;
@@ -27,9 +27,9 @@ public class DeviceFactoryTests
         var device = DeviceFactory.CreateDevice(probeMatch, remoteEndpoint);
 
         //Assert
-        device.Model.Should().Be(expectedModel);
-        device.Mfr.Should().Be(expectedMfr);
-        device.Scopes.Should().BeEquivalentTo(scopes);
+        device.Model.ShouldBe(expectedModel);
+        device.Mfr.ShouldBe(expectedMfr);
+        device.Scopes.ShouldBe(scopes);
     }
 
     [Fact]
@@ -49,8 +49,8 @@ public class DeviceFactoryTests
         var device = DeviceFactory.CreateDevice(probeMatch, remoteEndpoint);
 
         // Assert
-        device.Types.Should().HaveCount(2);
-        device.Types.Should().BeEquivalentTo("dn:NetworkVideoTransmitter", "tds:Device");
+        device.Types.Count().ShouldBe(2);
+        device.Types.ShouldBe(new[] { "dn:NetworkVideoTransmitter", "tds:Device" });
     }
 
     [Fact]
@@ -72,8 +72,8 @@ public class DeviceFactoryTests
         var device = DeviceFactory.CreateDevice(probeMatch, remoteEndpoint);
 
         // Assert
-        device.XAddresses.Should().HaveCount(2);
-        device.XAddresses.Should().BeEquivalentTo(device1, device2);
+        device.XAddresses.Count().ShouldBe(2);
+        device.XAddresses.ShouldBe(new[] { device1, device2 });
     }
 
     [Fact]
@@ -92,6 +92,6 @@ public class DeviceFactoryTests
         var device = DeviceFactory.CreateDevice(probeMatch, remoteEndpoint);
 
         // Assert
-        device.Address.Should().Be("127.0.0.1");
+        device.Address.ShouldBe("127.0.0.1");
     }
 }

@@ -1,5 +1,5 @@
-﻿using FluentAssertions;
 using OnvifDiscovery.Exceptions;
+using Shouldly;
 using Xunit;
 
 namespace OnvifDiscovery.Tests.Exceptions;
@@ -16,8 +16,8 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException();
 
         // Assert
-        sut.InnerException.Should().BeNull();
-        sut.Message.Should().Be(expectedMessage);
+        sut.InnerException.ShouldBeNull();
+        sut.Message.ShouldBe(expectedMessage);
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException(expectedMessage);
 
         // Assert
-        sut.InnerException.Should().BeNull();
-        sut.Message.Should().Be(expectedMessage);
+        sut.InnerException.ShouldBeNull();
+        sut.Message.ShouldBe(expectedMessage);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class DiscoveryExceptionTests
         var sut = new DiscoveryException(expectedMessage, innerEx);
 
         // Assert
-        sut.InnerException.Should().Be(innerEx);
-        sut.Message.Should().Be(expectedMessage);
+        sut.InnerException.ShouldBe(innerEx);
+        sut.Message.ShouldBe(expectedMessage);
     }
 }
