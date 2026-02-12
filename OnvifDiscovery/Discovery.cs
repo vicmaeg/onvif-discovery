@@ -54,47 +54,6 @@ public class Discovery : IDiscovery
         CancellationToken cancellationToken = default) =>
         DiscoverFromAllInterfaces(channelWriter, timeout, cancellationToken);
 
-    /// <summary>
-    ///     Discover new onvif devices on the network passing a callback
-    ///     to retrieve devices as they reply
-    /// </summary>
-    /// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
-    /// <param name="onDeviceDiscovered">A method that is called each time a new device replies.</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>The Task to be awaited</returns>
-    [Obsolete("Use one of the DiscoverAsync methods, this method will be removed in next major release")]
-    public async Task Discover(int timeout, Action<DiscoveryDevice> onDeviceDiscovered,
-        CancellationToken cancellationToken = default)
-    {
-        await foreach (var discoveredDevice in DiscoverAsync(timeout, cancellationToken))
-        {
-            onDeviceDiscovered(discoveredDevice);
-        }
-    }
-
-    /// <summary>
-    ///     Discover new onvif devices on the network
-    /// </summary>
-    /// <param name="timeout">A timeout in seconds to wait for onvif devices</param>
-    /// <param name="cancellationToken">A cancellation token</param>
-    /// <returns>a list of <see cref="DiscoveryDevice" /></returns>
-    /// <remarks>
-    ///     Use the <see cref="Discover(int, Action{DiscoveryDevice}, CancellationToken)" />
-    ///     overload (with an action as a parameter) if you want to retrieve devices as they reply.
-    /// </remarks>
-    [Obsolete("Use one of the DiscoverAsync methods, this method will be removed in next major release")]
-    public async Task<IEnumerable<DiscoveryDevice>> Discover(int timeout,
-        CancellationToken cancellationToken = default)
-    {
-        var devices = new List<DiscoveryDevice>();
-        await foreach (var discoveredDevice in DiscoverAsync(timeout, cancellationToken))
-        {
-            devices.Add(discoveredDevice);
-        }
-
-        return devices;
-    }
-
     private async Task DiscoverFromAllInterfaces(ChannelWriter<DiscoveryDevice> channelWriter, int timeout,
         CancellationToken cancellationToken)
     {
