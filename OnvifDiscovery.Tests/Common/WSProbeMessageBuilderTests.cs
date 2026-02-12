@@ -1,6 +1,6 @@
 using System.Text;
-using FluentAssertions;
 using OnvifDiscovery.Common;
+using Shouldly;
 using Xunit;
 
 namespace OnvifDiscovery.Tests.Common;
@@ -13,7 +13,7 @@ public class WSProbeMessageBuilderTests
         var messageId = Guid.NewGuid();
         var messageBytes = WSProbeMessageBuilder.NewProbeMessage(messageId);
         var message = Encoding.UTF8.GetString(messageBytes);
-        message.Should().Contain(messageId.ToString());
+        message.ShouldContain(messageId.ToString());
     }
 
     [Fact]
@@ -21,6 +21,7 @@ public class WSProbeMessageBuilderTests
     {
         Action act = () => WSProbeMessageBuilder.NewProbeMessage(Guid.Empty);
 
-        act.Should().Throw<ArgumentException>().WithMessage("messageId could not be Empty");
+        var exception = Should.Throw<ArgumentException>(act);
+        exception.Message.ShouldContain("messageId could not be Empty");
     }
 }

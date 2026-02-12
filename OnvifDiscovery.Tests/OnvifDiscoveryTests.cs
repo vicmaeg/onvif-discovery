@@ -4,12 +4,12 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
-using FluentAssertions;
 using Moq;
 using OnvifDiscovery.Exceptions;
 using OnvifDiscovery.Models;
 using OnvifDiscovery.Tests.TestHelpers;
 using OnvifDiscovery.Udp;
+using Shouldly;
 using Xunit;
 
 namespace OnvifDiscovery.Tests;
@@ -37,7 +37,7 @@ public class OnvifDiscoveryTests
         var act = async () => await wSDiscovery.DiscoverAsync(5).ToListAsync(cancellationToken);
 
         // Assert
-        await act.Should().ThrowAsync<DiscoveryException>();
+        await Should.ThrowAsync<DiscoveryException>(act);
     }
 
     [Fact]
@@ -74,15 +74,15 @@ public class OnvifDiscoveryTests
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
-        discoveryDevices.Should().HaveCount(2);
+        discoveryDevices.Count.ShouldBe(2);
         var firstDevice = discoveryDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera1!.IP);
-        firstDevice.Model.Should().Be(camera1.Model);
-        firstDevice.Mfr.Should().Be(camera1.Manufacturer);
+        firstDevice.Address.ShouldBe(camera1!.IP);
+        firstDevice.Model.ShouldBe(camera1.Model);
+        firstDevice.Mfr.ShouldBe(camera1.Manufacturer);
         var secondDevice = discoveryDevices.ElementAt(1);
-        secondDevice.Address.Should().Be(camera2!.IP);
-        secondDevice.Model.Should().Be(camera2.Model);
-        secondDevice.Mfr.Should().Be(camera2.Manufacturer);
+        secondDevice.Address.ShouldBe(camera2!.IP);
+        secondDevice.Model.ShouldBe(camera2.Model);
+        secondDevice.Mfr.ShouldBe(camera2.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
         udpClientMock.Verify(
@@ -149,23 +149,23 @@ public class OnvifDiscoveryTests
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
-        discoveryDevices.Should().HaveCount(4);
+        discoveryDevices.Count.ShouldBe(4);
         var firstDevice = discoveryDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera1A!.IP);
-        firstDevice.Model.Should().Be(camera1A.Model);
-        firstDevice.Mfr.Should().Be(camera1A.Manufacturer);
+        firstDevice.Address.ShouldBe(camera1A!.IP);
+        firstDevice.Model.ShouldBe(camera1A.Model);
+        firstDevice.Mfr.ShouldBe(camera1A.Manufacturer);
         var secondDevice = discoveryDevices.ElementAt(1);
-        secondDevice.Address.Should().Be(camera1B!.IP);
-        secondDevice.Model.Should().Be(camera1B.Model);
-        secondDevice.Mfr.Should().Be(camera1B.Manufacturer);
+        secondDevice.Address.ShouldBe(camera1B!.IP);
+        secondDevice.Model.ShouldBe(camera1B.Model);
+        secondDevice.Mfr.ShouldBe(camera1B.Manufacturer);
         var thirdDevice = discoveryDevices.ElementAt(2);
-        thirdDevice.Address.Should().Be(camera2A!.IP);
-        thirdDevice.Model.Should().Be(camera2A.Model);
-        thirdDevice.Mfr.Should().Be(camera2A.Manufacturer);
+        thirdDevice.Address.ShouldBe(camera2A!.IP);
+        thirdDevice.Model.ShouldBe(camera2A.Model);
+        thirdDevice.Mfr.ShouldBe(camera2A.Manufacturer);
         var fourthDevice = discoveryDevices.ElementAt(3);
-        fourthDevice.Address.Should().Be(camera2B!.IP);
-        fourthDevice.Model.Should().Be(camera2B.Model);
-        fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
+        fourthDevice.Address.ShouldBe(camera2B!.IP);
+        fourthDevice.Model.ShouldBe(camera2B.Model);
+        fourthDevice.Mfr.ShouldBe(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
         udpClient1Mock.Verify(
@@ -204,7 +204,7 @@ public class OnvifDiscoveryTests
         var act = async () => await wSDiscovery.DiscoverAsync(5, cancellation.Token).ToListAsync(cancellation.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
+        await Should.ThrowAsync<OperationCanceledException>(act);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Arrange
-        discoveredDevices.Should().HaveCount(1);
+        discoveredDevices.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public class OnvifDiscoveryTests
         var discoveredDevices = await wSDiscovery.DiscoverAsync(1, cancellationToken).ToListAsync(cancellationToken);
 
         // Arrange
-        discoveredDevices.Should().HaveCount(2);
+        discoveredDevices.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -331,11 +331,11 @@ public class OnvifDiscoveryTests
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
-        discoveryDevices.Should().HaveCount(1);
+        discoveryDevices.Count.ShouldBe(1);
         var firstDevice = discoveryDevices[0];
-        firstDevice.Address.Should().Be(camera!.IP);
-        firstDevice.Model.Should().Be(camera.Model);
-        firstDevice.Mfr.Should().Be(camera.Manufacturer);
+        firstDevice.Address.ShouldBe(camera!.IP);
+        firstDevice.Model.ShouldBe(camera.Model);
+        firstDevice.Mfr.ShouldBe(camera.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
         udpClientMock.Verify(
@@ -369,17 +369,18 @@ public class OnvifDiscoveryTests
         await foreach (var device in wSDiscovery.DiscoverAsync(1, cancellationToken))
         {
             numCamerasDiscovered++;
-            stopWatch.ElapsedMilliseconds.Should()
-                .BeCloseTo(200 * numCamerasDiscovered, 80 * (ulong)numCamerasDiscovered);
+            stopWatch.ElapsedMilliseconds.ShouldBeInRange(
+                200 * numCamerasDiscovered - 80 * numCamerasDiscovered,
+                200 * numCamerasDiscovered + 80 * numCamerasDiscovered);
             var ip = $"192.168.1.{numCamerasDiscovered}";
-            device.Address.Should().Be(ip);
-            device.Model.Should().Be("AxisHardware");
-            device.Mfr.Should().Be("AxisName");
+            device.Address.ShouldBe(ip);
+            device.Model.ShouldBe("AxisHardware");
+            device.Mfr.ShouldBe("AxisName");
         }
 
         stopWatch.Stop();
-        stopWatch.ElapsedMilliseconds.Should().BeCloseTo(1000, 100);
-        numCamerasDiscovered.Should().Be(4);
+        stopWatch.ElapsedMilliseconds.ShouldBeInRange(900, 1100);
+        numCamerasDiscovered.ShouldBe(4);
     }
 
     [Fact]
@@ -398,7 +399,8 @@ public class OnvifDiscoveryTests
         var act = async () => await wSDiscovery.DiscoverAsync(5, cancellationToken).ToListAsync(cancellationToken);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
+        var exception = await Should.ThrowAsync<Exception>(act);
+        exception.Message.ShouldBe(exceptionMessage);
     }
 
     [Fact]
@@ -462,23 +464,23 @@ public class OnvifDiscoveryTests
 
         // Assert
         var discoveryDevices = discoveredDevices.ToList();
-        discoveryDevices.Should().HaveCount(4);
+        discoveryDevices.Count.ShouldBe(4);
         var firstDevice = discoveryDevices.ElementAt(0);
-        firstDevice.Address.Should().Be(camera1A!.IP);
-        firstDevice.Model.Should().Be(camera1A.Model);
-        firstDevice.Mfr.Should().Be(camera1A.Manufacturer);
+        firstDevice.Address.ShouldBe(camera1A!.IP);
+        firstDevice.Model.ShouldBe(camera1A.Model);
+        firstDevice.Mfr.ShouldBe(camera1A.Manufacturer);
         var secondDevice = discoveryDevices.ElementAt(1);
-        secondDevice.Address.Should().Be(camera1B!.IP);
-        secondDevice.Model.Should().Be(camera1B.Model);
-        secondDevice.Mfr.Should().Be(camera1B.Manufacturer);
+        secondDevice.Address.ShouldBe(camera1B!.IP);
+        secondDevice.Model.ShouldBe(camera1B.Model);
+        secondDevice.Mfr.ShouldBe(camera1B.Manufacturer);
         var thirdDevice = discoveryDevices.ElementAt(2);
-        thirdDevice.Address.Should().Be(camera2A!.IP);
-        thirdDevice.Model.Should().Be(camera2A.Model);
-        thirdDevice.Mfr.Should().Be(camera2A.Manufacturer);
+        thirdDevice.Address.ShouldBe(camera2A!.IP);
+        thirdDevice.Model.ShouldBe(camera2A.Model);
+        thirdDevice.Mfr.ShouldBe(camera2A.Manufacturer);
         var fourthDevice = discoveryDevices.ElementAt(3);
-        fourthDevice.Address.Should().Be(camera2B!.IP);
-        fourthDevice.Model.Should().Be(camera2B.Model);
-        fourthDevice.Mfr.Should().Be(camera2B.Manufacturer);
+        fourthDevice.Address.ShouldBe(camera2B!.IP);
+        fourthDevice.Model.ShouldBe(camera2B.Model);
+        fourthDevice.Mfr.ShouldBe(camera2B.Manufacturer);
 
         udpClientFactoryMock.Verify(cf => cf.CreateClientForeachInterface(), Times.Once);
         udpClient1Mock.Verify(
