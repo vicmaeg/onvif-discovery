@@ -25,7 +25,7 @@ steps:
       extraProperties: |
         sonar.exclusions=**/bin/**/*,**/obj/**/*,OnvifDiscovery/Client/OnvifUdpClient.cs
         sonar.language=cs
-        sonar.cs.cobertura.reportsPaths=$(Agent.TempDirectory)/coverage.cobertura.xml
+        sonar.cs.vscoveragexml.reportsPaths=$(Agent.TempDirectory)/coverage.xml
 
   - task: UseDotNet@2
     displayName: 'Install .NET Core SDK'
@@ -50,7 +50,7 @@ steps:
     inputs:
       command: custom
       custom: test
-      arguments: '--configuration $(buildConfiguration) --results-directory $(Agent.TempDirectory) --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --report-xunit-trx --report-xunit-trx-filename test-results.trx'
+      arguments: '--configuration $(buildConfiguration) --results-directory $(Agent.TempDirectory) --coverage --coverage-output-format xml --coverage-output coverage.xml --report-xunit-trx --report-xunit-trx-filename test-results.trx'
 
   - task: PublishTestResults@2
     inputs:
