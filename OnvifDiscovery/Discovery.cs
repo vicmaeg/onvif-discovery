@@ -62,7 +62,7 @@ public class Discovery : IDiscovery
         try
         {
             var clients = clientFactory.CreateClientForeachInterface().ToArray();
-            if (!clients.Any())
+            if (clients.Length == 0)
             {
                 throw new DiscoveryException("Missing valid NetworkInterfaces, UdpClients could not be created");
             }
