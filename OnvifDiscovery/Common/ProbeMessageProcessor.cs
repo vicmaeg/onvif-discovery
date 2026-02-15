@@ -13,7 +13,7 @@ internal static class ProbeMessageProcessor
         var strResponse = Encoding.UTF8.GetString(response.Buffer);
         var xmlResponse = DeserializeResponse(strResponse);
         if (IsFromProbeMessage(messageId, xmlResponse)
-            && xmlResponse!.Body.ProbeMatches.Any()
+            && xmlResponse!.Body.ProbeMatches.Length > 0
             && !string.IsNullOrEmpty(xmlResponse.Body.ProbeMatches[0].Scopes))
         {
             return DeviceFactory.CreateDevice(xmlResponse.Body.ProbeMatches[0], response.RemoteEndPoint);
