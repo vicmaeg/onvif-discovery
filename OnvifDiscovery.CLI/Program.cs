@@ -2,7 +2,7 @@
 
 Console.WriteLine("Starting Discover ONVIF cameras for 10 seconds, press Ctrl+C to abort\n");
 
-var cts = new CancellationTokenSource();
+using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (s, e) =>
 {
     e.Cancel = true;
